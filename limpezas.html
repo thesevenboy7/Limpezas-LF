@@ -589,10 +589,11 @@ const ALL_UNITS = [
 function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
 
 // ─── ESTADO ──────────────────────────────────
-let limpezas        = [];
-let selectedUnit    = '';
-let pendingRemoveId = null;
-let currentFilter   = '7';
+let limpezas         = [];
+let notionHojeItems  = [];   // registros do dia atual buscados do Notion
+let selectedUnit     = '';
+let pendingRemoveId  = null;
+let currentFilter    = '7';
 
 // ─── INIT ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -647,13 +648,72 @@ function ls(k,v) {
   if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v);
 }
 function getKey(data) { return `lf_limpezas_${data}`; }
-function salvarLocal() { ls(getKey(document.getElementById('inputData').value), JSON.stringify(limpezas)); }
-function carregarLocal(data) { const r=ls(getKey(data)); limpezas=r?JSON.parse(r):[]; render(); }
+function nextDayISO(iso) {
+  const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function salvarLocal() {
+  // Salva só os não salvos (rascunhos locais)
+  ls(getKey(document.getElementById('inputData').value), JSON.stringify(limpezas.filter(l=>!l.saved)));
+}
+function carregarLocal(data) {
+  const r=ls(getKey(data));
+  limpezas = (r?JSON.parse(r):[]).filter(l=>!l.saved); // só rascunhos
+  notionHojeItems = [];
+  render();
+  fetchHojeDoNotion(data); // busca do Notion em paralelo
+}
 
 let toastTimer;
 function showToast(msg, ms=2600) {
   const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+// ─── BUSCA DO DIA NO NOTION ──────────────────
+async function fetchHojeDoNotion(dateISO) {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({
+        filter:{ and:[
+          {property:'Data',date:{on_or_after:dateISO}},
+          {property:'Data',date:{before:nextDayISO(dateISO)}}
+        ]},
+        sorts:[{property:'Data',direction:'descending'}],
+        page_size:100
+      })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // Monta lista de itens do Notion para este dia
+    const notionIds = new Set(limpezas.filter(l=>l.notionId).map(l=>l.notionId));
+    notionHojeItems = data.results
+      .filter(pg => !notionIds.has(pg.id)) // evita duplicar com rascunhos salvos
+      .map(pg => {
+        const p = pg.properties;
+        return {
+          id:          pg.id,
+          notionId:    pg.id,
+          funcionaria: p['Funcionária']?.select?.name||'?',
+          unidade:     p['Unidade']?.select?.name||'?',
+          valor:       p['Valor Unit.']?.number||0,
+          extra:       0,
+          extraDesc:   '',
+          data:        dateISO,
+          saved:       true,
+          fromNotion:  true,
+          pago:        p['Pago?']?.checkbox||false
+        };
+      });
+    render();
+  } catch(_) { /* silencioso — lista local continua funcionando */ }
 }
 
 // ─── TOKEN BANNER ────────────────────────────
@@ -727,7 +787,7 @@ function adicionarLimpeza() {
 
 // ─── REMOVER (com confirmação) ────────────────
 function removerLimpeza(id) {
-  const l = limpezas.find(x=>x.id===id);
+  const l = limpezas.find(x=>x.id===id) || notionHojeItems.find(x=>x.id===id);
   if (!l) return;
   pendingRemoveId = id;
   document.getElementById('confirmText').textContent =
@@ -740,11 +800,17 @@ function closeConfirm() {
 }
 function confirmRemove() {
   if (!pendingRemoveId) return;
-  limpezas = limpezas.filter(l=>l.id!==pendingRemoveId);
+  const inLimpezas = limpezas.some(l=>l.id===pendingRemoveId);
+  if (inLimpezas) {
+    limpezas = limpezas.filter(l=>l.id!==pendingRemoveId);
+    salvarLocal();
+  } else {
+    notionHojeItems = notionHojeItems.filter(i=>i.id!==pendingRemoveId);
+  }
   pendingRemoveId = null;
   document.getElementById('confirmModal').classList.remove('open');
-  salvarLocal(); render();
-  showToast('🗑️ Limpeza removida');
+  render();
+  showToast('🗑️ Limpeza removida da visualização');
 }
 
 // ─── RENDER ──────────────────────────────────
@@ -752,24 +818,29 @@ function render() { renderLista(); renderSummary(); renderSaveBar(); }
 
 function renderLista() {
   const el = document.getElementById('listaLimpezas');
-  if (!limpezas.length) {
-    el.innerHTML = `<div class="list-empty">Nenhuma limpeza adicionada ainda.<br>Use o formulário acima para começar.</div>`;
+  const todos = [...limpezas, ...notionHojeItems];
+  if (!todos.length) {
+    el.innerHTML = `<div class="list-empty">Nenhuma limpeza registrada neste dia.</div>`;
     return;
   }
-  el.innerHTML = limpezas.map(l => {
+  el.innerHTML = todos.map(l => {
     const cor   = EMP_COLORS[l.funcionaria]||'#94a3b8';
     const total = (l.valor||0)+(l.extra||0);
     const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
     const statusBadge = l.saved
       ? `<span class="saved-badge">✓ Salvo no Notion</span>`
       : `<span class="unsaved-badge">⏳ Não salvo</span>`;
+    const pagoBtn = l.notionId
+      ? `<button class="pago-btn ${l.pago?'pago':'nao-pago'}" onclick="togglePagoHoje('${l.notionId}',${!!l.pago},this)">${l.pago?'✓ Pago':'✗ Não pago'}</button>`
+      : '';
     return `
       <div class="list-item${l.saved?' saved':''}" style="border-left-color:${cor}">
         <div class="item-dot" style="background:${cor}"></div>
         <div class="item-info">
           <div class="item-main">${l.funcionaria} — Unidade ${l.unidade}</div>
           <div class="item-sub">${fmtData(l.data)}</div>
-          ${statusBadge}${extraHtml}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${statusBadge}${pagoBtn}</div>
+          ${extraHtml}
         </div>
         <div class="item-value">${fmt(total)}</div>
         <button class="btn-remove" onclick="removerLimpeza('${l.id}')" aria-label="Remover">×</button>
@@ -779,10 +850,11 @@ function renderLista() {
 
 function renderSummary() {
   const section = document.getElementById('summarySection');
-  if (!limpezas.length) { section.style.display='none'; return; }
+  const todos = [...limpezas, ...notionHojeItems];
+  if (!todos.length) { section.style.display='none'; return; }
   section.style.display = 'block';
   const stats={};let totalGeral=0,countGeral=0;
-  limpezas.forEach(l=>{
+  todos.forEach(l=>{
     const t=(l.valor||0)+(l.extra||0);
     if(!stats[l.funcionaria]) stats[l.funcionaria]={total:0,count:0};
     stats[l.funcionaria].total+=t; stats[l.funcionaria].count++;
@@ -887,10 +959,13 @@ async function salvarNotion() {
     }
   }
 
-  // Marcar como salvos (não remove da lista)
-  resultados.forEach(r=>{
-    if(r.ok){ const item=limpezas.find(l=>l.id===r.id); if(item){item.saved=true;item.notionId=r.notionId;} }
-  });
+  // Mover os salvos para notionHojeItems e remover de limpezas
+  const savedIds = new Set(resultados.filter(r=>r.ok).map(r=>r.id));
+  const novosSalvos = limpezas
+    .filter(l=>savedIds.has(l.id))
+    .map(l=>{ const r=resultados.find(x=>x.id===l.id); return {...l,saved:true,notionId:r.notionId,fromNotion:true}; });
+  notionHojeItems = [...novosSalvos, ...notionHojeItems];
+  limpezas = limpezas.filter(l=>!savedIds.has(l.id));
   salvarLocal();
 
   const nOk=resultados.filter(r=>r.ok).length, nErr=resultados.length-nOk;
@@ -1074,6 +1149,32 @@ async function loadHistory() {
       section.style.display='block';
     }
   }
+}
+
+// Pago/não pago nos itens do dia atual
+async function togglePagoHoje(notionId, currentPago, btn) {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
+  btn.disabled = true;
+  const newPago = !currentPago;
+  try {
+    const res = await fetch(`${proxyUrl}/v1/pages/${notionId}`, {
+      method:'PATCH',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({properties:{'Pago?':{checkbox:newPago}}})
+    });
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.message||`HTTP ${res.status}`); }
+    // Atualiza estado local
+    const item = notionHojeItems.find(i=>i.notionId===notionId);
+    if (item) item.pago = newPago;
+    btn.className   = `pago-btn ${newPago?'pago':'nao-pago'}`;
+    btn.textContent = newPago ? '✓ Pago' : '✗ Não pago';
+    btn.onclick     = () => togglePagoHoje(notionId, newPago, btn);
+    showToast(newPago ? '✅ Marcado como pago!' : '↩️ Marcado como não pago');
+  } catch(e) {
+    showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+  } finally { btn.disabled=false; }
 }
 
 function toggleHistoryDay(ds) {
