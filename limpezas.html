@@ -358,6 +358,41 @@
       font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
 
+    /* ── PAYMENT SUMMARY ── */
+    .btn-copiar {
+      width: 100%; height: 48px; background: #25D366; color: white; border: none;
+      border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-bottom: 12px; -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+    }
+    .btn-copiar:active { background: #128C7E; }
+    .pagamento-total-card {
+      background: #1e3a5f; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow);
+    }
+    .ptc-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.05em; }
+    .ptc-value { font-size: 22px; font-weight: 800; color: white; margin-top: 2px; line-height: 1; }
+    .ptc-sub   { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+    .pagamento-card {
+      background: var(--card); border-radius: 14px; padding: 13px 14px 13px 18px;
+      box-shadow: var(--shadow); margin-bottom: 8px; border-left: 4px solid #ccc;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .pagamento-info { flex: 1; min-width: 0; }
+    .pagamento-nome { font-size: 14px; font-weight: 800; }
+    .pagamento-detalhe { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .pagamento-pendente { font-size: 12px; font-weight: 700; color: #dc2626; margin-top: 3px; }
+    .pagamento-ok { font-size: 12px; font-weight: 700; color: #15803d; margin-top: 3px; }
+    .pagamento-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .pagamento-valor { font-size: 18px; font-weight: 800; color: var(--text); }
+    .btn-pagar-tudo {
+      background: #dcfce7; color: #15803d; border: none; border-radius: 8px;
+      padding: 5px 11px; font-size: 12px; font-weight: 700; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; white-space: nowrap;
+    }
+    .btn-pagar-tudo:active { background: #bbf7d0; }
+    .btn-pagar-tudo:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* ── SAVE RESULT ── */
     .result-item {
       display: flex; align-items: center; gap: 10px; padding: 11px 12px;
@@ -495,6 +530,9 @@
     <button class="filter-btn" id="f30"  onclick="setFilter('30')">30 dias</button>
     <button class="filter-btn" id="fMes" onclick="setFilter('mes')">Este mês</button>
   </div>
+  <button class="btn-copiar" id="btnCopiar" onclick="copiarResumo()" style="display:none">
+    <span>📋</span> Copiar resumo para WhatsApp
+  </button>
   <div id="historyContent">
     <div class="history-loading">⏳ Carregando histórico...</div>
   </div>
@@ -590,7 +628,8 @@ function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
 
 // ─── ESTADO ──────────────────────────────────
 let limpezas         = [];
-let notionHojeItems  = [];   // registros do dia atual buscados do Notion
+let notionHojeItems  = [];
+let allHistoryItems  = [];   // todos os itens do histórico atual (para copiar/resumo)
 let selectedUnit     = '';
 let pendingRemoveId  = null;
 let currentFilter    = '7';
@@ -1041,34 +1080,75 @@ async function loadHistory() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // Group by date
+    // Parse e agrupa por data
     const byDate = {};
+    allHistoryItems = [];
     for (const pg of data.results) {
-      const p = pg.properties;
+      const p  = pg.properties;
       const ds = (p['Data']?.date?.start||'').slice(0,10);
       if (!ds) continue;
-      if (!byDate[ds]) byDate[ds]=[];
-      byDate[ds].push({
+      const item = {
         id:          pg.id,
         funcionaria: p['Funcionária']?.select?.name||'?',
         unidade:     p['Unidade']?.select?.name||'?',
         valor:       p['Valor Unit.']?.number||0,
-        pago:        p['Pago?']?.checkbox||false
-      });
+        pago:        p['Pago?']?.checkbox||false,
+        data:        ds
+      };
+      if (!byDate[ds]) byDate[ds]=[];
+      byDate[ds].push(item);
+      allHistoryItems.push(item);
     }
 
     const dates = Object.keys(byDate).sort().reverse();
+    document.getElementById('btnCopiar').style.display = allHistoryItems.length ? 'flex' : 'none';
 
-    // Weekly stats
-    const wStats={}; let wTotal=0,wCount=0;
-    for (const items of Object.values(byDate)) {
-      for (const i of items) {
-        if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0};
-        wStats[i.funcionaria].total+=i.valor; wStats[i.funcionaria].count++;
-        wTotal+=i.valor; wCount++;
-      }
+    // ── Resumo de pagamentos por funcionária ──
+    const payByEmp={};let payTotal=0,payPend=0;
+    for (const i of allHistoryItems) {
+      if (!payByEmp[i.funcionaria]) payByEmp[i.funcionaria]={items:[],total:0,pendente:0};
+      payByEmp[i.funcionaria].items.push(i);
+      payByEmp[i.funcionaria].total+=i.valor;
+      if (!i.pago) payByEmp[i.funcionaria].pendente+=i.valor;
+      payTotal+=i.valor; if (!i.pago) payPend+=i.valor;
     }
+    const empPayCards = Object.entries(payByEmp)
+      .sort((a,b)=>b[1].pendente-a[1].pendente)
+      .map(([nome,s])=>{
+        const cor=EMP_COLORS[nome]||'#94a3b8';
+        const nNao=s.items.filter(i=>!i.pago).length;
+        const pendH = s.pendente>0
+          ? `<div class="pagamento-pendente">💰 ${fmt(s.pendente)} pendente · ${nNao} limpeza${nNao!==1?'s':''}</div>`
+          : `<div class="pagamento-ok">✅ Tudo pago</div>`;
+        const btnP = s.pendente>0
+          ? `<button class="btn-pagar-tudo" onclick="marcarTudoPago('${nome}',this)">Marcar pagas</button>`
+          : '';
+        return `<div class="pagamento-card" style="border-left-color:${cor}">
+          <div class="pagamento-info">
+            <div class="pagamento-nome">${nome}</div>
+            <div class="pagamento-detalhe">${s.items.length} limpeza${s.items.length!==1?'s':''}</div>
+            ${pendH}</div>
+          <div class="pagamento-right"><div class="pagamento-valor">${fmt(s.total)}</div>${btnP}</div>
+        </div>`;
+      }).join('');
+    const payHtml = `
+      <div class="section-label" style="margin-bottom:8px">Pagamentos</div>
+      <div class="pagamento-total-card">
+        <div><div class="ptc-label">Total do período</div><div class="ptc-value">${fmt(payTotal)}</div>
+        <div class="ptc-sub">${allHistoryItems.length} limpeza${allHistoryItems.length!==1?'s':''}</div></div>
+        ${payPend>0
+          ? `<div style="text-align:right"><div class="ptc-label">A pagar</div><div class="ptc-value" style="color:#fca5a5">${fmt(payPend)}</div></div>`
+          : `<div style="color:#86efac;font-size:14px;font-weight:700">✅ Tudo pago</div>`}
+      </div>
+      ${empPayCards}`;
 
+    // Stats por funcionária
+    const wStats={}; let wTotal=0,wCount=0;
+    for (const i of allHistoryItems) {
+      if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0};
+      wStats[i.funcionaria].total+=i.valor; wStats[i.funcionaria].count++;
+      wTotal+=i.valor; wCount++;
+    }
     let weekHtml='';
     if (wCount>0) {
       const empCards = Object.entries(wStats)
@@ -1076,26 +1156,21 @@ async function loadHistory() {
         .map(([nome,s])=>{
           const cor=EMP_COLORS[nome]||'#94a3b8';
           return `<div class="week-stat-card" style="border-left-color:${cor}">
-            <div class="wsc-name">${nome}</div>
-            <div class="wsc-total">${fmt(s.total)}</div>
+            <div class="wsc-name">${nome}</div><div class="wsc-total">${fmt(s.total)}</div>
             <div class="wsc-count">${s.count} limpeza${s.count!==1?'s':''}</div></div>`;
         }).join('');
       const nF=Object.keys(wStats).length;
       weekHtml = `
-        <div class="section-label" style="margin-bottom:8px">Semana — por funcionária</div>
-        <div class="week-stats-grid">
-          ${empCards}
+        <div class="section-label" style="margin-bottom:8px;margin-top:14px">Por funcionária</div>
+        <div class="week-stats-grid">${empCards}
           <div class="week-stat-card total-week">
-            <div class="wsc-name">Total da Semana</div>
-            <div class="wsc-total">${fmt(wTotal)}</div>
+            <div class="wsc-name">Total do período</div><div class="wsc-total">${fmt(wTotal)}</div>
             <div class="wsc-count">${wCount} limpeza${wCount!==1?'s':''} · ${nF} funcionária${nF!==1?'s':''}</div>
-          </div>
-        </div>
-        <div class="section-label" style="margin-bottom:8px;margin-top:12px">Por dia</div>`;
+          </div></div>`;
     }
 
     if (!dates.length) {
-      content.innerHTML = weekHtml+'<div class="history-empty">Nenhum registro nos últimos 7 dias.</div>';
+      content.innerHTML = payHtml+weekHtml+'<div class="history-empty" style="margin-top:12px">Nenhum registro no período.</div>';
       return;
     }
 
@@ -1138,7 +1213,9 @@ async function loadHistory() {
         </div>`;
     }).join('');
 
-    content.innerHTML = weekHtml+daysHtml;
+    content.innerHTML = payHtml + weekHtml
+      + `<div class="section-label" style="margin-bottom:8px;margin-top:14px">Por dia</div>`
+      + daysHtml;
 
   } catch(e) {
     section.style.display='none';
@@ -1175,6 +1252,75 @@ async function togglePagoHoje(notionId, currentPago, btn) {
   } catch(e) {
     showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
   } finally { btn.disabled=false; }
+}
+
+// ─── COPIAR RESUMO PARA WHATSAPP ─────────────
+function copiarResumo() {
+  if (!allHistoryItems.length) { showToast('Nenhum dado para copiar'); return; }
+
+  const labels = {'hoje':'Hoje','7':'7 dias','15':'15 dias','30':'30 dias','mes':'Este mês'};
+  const periodo = labels[currentFilter]||'Período';
+
+  const byEmp = {};
+  for (const i of allHistoryItems) {
+    if (!byEmp[i.funcionaria]) byEmp[i.funcionaria]=[];
+    byEmp[i.funcionaria].push(i);
+  }
+
+  let txt = `🧹 *LF Services — ${periodo}*\n\n`;
+  for (const [nome, items] of Object.entries(byEmp).sort()) {
+    const total   = items.reduce((s,i)=>s+i.valor,0);
+    const pendente= items.filter(i=>!i.pago).reduce((s,i)=>s+i.valor,0);
+    txt += `👤 *${nome}*\n`;
+    [...items].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{
+      txt += `  ${fmtData(i.data)} · Unid.${i.unidade} · $${i.valor} · ${i.pago?'✓':'✗'}\n`;
+    });
+    txt += `  *Total: $${total}*`;
+    txt += pendente>0 ? ` · 💰 $${pendente} pendente\n\n` : ` · ✅ Tudo pago\n\n`;
+  }
+  const gt=allHistoryItems.reduce((s,i)=>s+i.valor,0);
+  const gp=allHistoryItems.filter(i=>!i.pago).reduce((s,i)=>s+i.valor,0);
+  txt += `💰 *TOTAL: $${gt}*`;
+  if (gp>0) txt += `\n*A pagar: $${gp}*`;
+
+  const fallback = el => {
+    document.body.appendChild(el); el.select();
+    try { document.execCommand('copy'); } catch(_){}
+    document.body.removeChild(el);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('✅ Resumo copiado! Cole no WhatsApp.', 3000))
+      .catch(()=>{ const el=document.createElement('textarea'); el.value=txt; fallback(el); showToast('✅ Copiado!'); });
+  } else {
+    const el=document.createElement('textarea'); el.value=txt; fallback(el);
+    showToast('✅ Resumo copiado! Cole no WhatsApp.', 3000);
+  }
+}
+
+// ─── MARCAR TUDO PAGO POR FUNCIONÁRIA ────────
+async function marcarTudoPago(funcionaria, btn) {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
+
+  const naoPagos = allHistoryItems.filter(i=>i.funcionaria===funcionaria&&!i.pago);
+  if (!naoPagos.length) return;
+
+  btn.disabled=true; btn.textContent='⏳';
+  let ok=0;
+  for (const item of naoPagos) {
+    try {
+      const res = await fetch(`${proxyUrl}/v1/pages/${item.id}`,{
+        method:'PATCH',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+        body: JSON.stringify({properties:{'Pago?':{checkbox:true}}})
+      });
+      if (res.ok) { item.pago=true; ok++; }
+    } catch(_){}
+  }
+  showToast(`✅ ${ok} limpeza${ok!==1?'s':''} de ${funcionaria} marcada${ok!==1?'s':''} como paga`);
+  loadHistory();
 }
 
 function toggleHistoryDay(ds) {
