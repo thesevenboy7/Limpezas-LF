@@ -6,446 +6,350 @@
   <title>LF Limpezas</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --green: #22c55e;
-      --green-dark: #16a34a;
-      --red: #ef4444;
-      --red-dark: #dc2626;
-      --blue: #3b82f6;
-      --blue-dark: #2563eb;
-      --text: #1e293b;
-      --text-muted: #64748b;
+      --bg: #f0f4f8; --card: #ffffff;
+      --green: #22c55e; --green-dark: #16a34a;
+      --red: #ef4444; --red-dark: #dc2626;
+      --blue: #3b82f6; --blue-dark: #2563eb;
+      --text: #1e293b; --text-muted: #64748b;
       --border: #e2e8f0;
       --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
     }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 16px;
-      min-height: 100vh;
-      padding-bottom: 110px;
+      background: var(--bg); color: var(--text); font-size: 16px;
+      min-height: 100vh; padding-bottom: 110px;
     }
 
     /* ── HEADER ── */
     .header {
-      background: #1e3a5f;
-      color: white;
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--shadow-md);
+      background: #1e3a5f; color: white; padding: 16px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-md);
     }
     .header-logo { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; opacity: 0.7; text-transform: uppercase; }
     .header-title { font-size: 20px; font-weight: 800; margin-top: 1px; }
     .header-sub { font-size: 13px; opacity: 0.75; margin-top: 2px; }
     .btn-settings {
-      background: rgba(255,255,255,0.12);
-      border: none;
-      color: white;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      font-size: 19px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      flex-shrink: 0;
+      background: rgba(255,255,255,0.12); border: none; color: white;
+      width: 42px; height: 42px; border-radius: 50%; font-size: 19px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .btn-settings:active { background: rgba(255,255,255,0.22); }
 
+    /* ── TOKEN BANNER ── */
+    .token-banner {
+      background: #fef3c7; border-bottom: 2px solid #fcd34d;
+      padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; color: #92400e;
+    }
+    .token-banner-icon { font-size: 20px; flex-shrink: 0; }
+    .token-banner-text { flex: 1; line-height: 1.4; }
+    .token-banner-btn {
+      background: #d97706; color: white; border: none; border-radius: 8px;
+      padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+      flex-shrink: 0; white-space: nowrap; -webkit-tap-highlight-color: transparent;
+    }
+    .token-banner-btn:active { background: #b45309; }
+
     /* ── FORM ── */
     .form-card {
-      margin: 16px 16px 12px;
-      background: var(--card);
-      border-radius: 18px;
-      padding: 20px 18px 18px;
-      box-shadow: var(--shadow);
+      margin: 16px 16px 12px; background: var(--card);
+      border-radius: 18px; padding: 20px 18px 18px; box-shadow: var(--shadow);
     }
     .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
     }
     .form-row { margin-bottom: 12px; }
     .form-row label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 6px;
+      display: block; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
     }
-    select,
-    input[type="number"],
-    input[type="date"] {
-      width: 100%;
-      height: 52px;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 0 14px;
-      font-size: 17px;
-      font-family: inherit;
-      color: var(--text);
-      background: var(--bg);
-      outline: none;
-      transition: border-color 0.18s;
-      -webkit-appearance: none;
-      appearance: none;
+    select, input[type="number"], input[type="date"], input[type="text"] {
+      width: 100%; height: 52px; border: 2px solid var(--border); border-radius: 12px;
+      padding: 0 14px; font-size: 17px; font-family: inherit; color: var(--text);
+      background: var(--bg); outline: none; transition: border-color 0.18s;
+      -webkit-appearance: none; appearance: none;
     }
     select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      padding-right: 44px;
-      cursor: pointer;
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 44px; cursor: pointer;
     }
-    select:focus, input[type="number"]:focus, input[type="date"]:focus {
-      border-color: var(--blue);
-      background: white;
+    select:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus {
+      border-color: var(--blue); background: white;
     }
     .valor-wrap { position: relative; }
     .valor-prefix {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-muted);
-      pointer-events: none;
-      z-index: 1;
+      position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+      font-size: 18px; font-weight: 700; color: var(--text-muted);
+      pointer-events: none; z-index: 1;
     }
     .valor-wrap input { padding-left: 30px; }
-
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+    /* ── UNIT SEARCH ── */
+    .unit-search-wrap { position: relative; }
+    .unit-clear-btn {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted); font-size: 20px;
+      cursor: pointer; padding: 4px; display: none; line-height: 1;
+      -webkit-tap-highlight-color: transparent; z-index: 2;
+    }
+    .unit-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--card); border: 2px solid var(--blue); border-radius: 12px;
+      box-shadow: var(--shadow-md); z-index: 50; display: none;
+      max-height: 210px; overflow-y: auto;
+    }
+    .unit-option {
+      padding: 13px 16px; font-size: 16px; font-weight: 600;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .unit-option:last-child { border-bottom: none; }
+    .unit-option:active { background: var(--bg); }
+    .unit-option-val { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
     .extra-divider {
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin: 14px 0 12px;
-      position: relative;
+      text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0.06em; text-transform: uppercase; margin: 14px 0 12px; position: relative;
     }
     .extra-divider::before, .extra-divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 28%;
-      height: 1px;
-      background: var(--border);
+      content: ''; position: absolute; top: 50%; width: 28%; height: 1px; background: var(--border);
     }
-    .extra-divider::before { left: 0; }
-    .extra-divider::after  { right: 0; }
+    .extra-divider::before { left: 0; } .extra-divider::after { right: 0; }
     .extra-badge {
-      display: inline-block;
-      background: #fef3c7;
-      color: #92400e;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 7px;
-      margin-top: 3px;
+      display: inline-block; background: #fef3c7; color: #92400e;
+      border-radius: 6px; font-size: 11px; font-weight: 700; padding: 2px 7px; margin-top: 3px;
     }
     .btn-add {
-      width: 100%;
-      height: 56px;
-      background: var(--green);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-size: 19px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      letter-spacing: 0.01em;
-      transition: background 0.15s, transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
+      width: 100%; height: 56px; background: var(--green); color: white; border: none;
+      border-radius: 14px; font-size: 19px; font-weight: 800; cursor: pointer; margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
     }
     .btn-add:active { background: var(--green-dark); transform: scale(0.975); }
 
     /* ── SUMMARY ── */
-    .summary-section {
-      margin: 0 16px 12px;
-    }
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .summary-section { margin: 0 16px 12px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .summary-card {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 14px 14px 12px;
-      box-shadow: var(--shadow);
-      border-left: 4px solid #ccc;
+      background: var(--card); border-radius: 14px; padding: 14px 14px 12px;
+      box-shadow: var(--shadow); border-left: 4px solid #ccc;
     }
-    .summary-card.total-card {
-      grid-column: 1 / -1;
-      background: #1e3a5f;
-      border-left: none;
-      border-radius: 14px;
-    }
-    .sc-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+    .summary-card.total-card { grid-column: 1 / -1; background: #1e3a5f; border-left: none; }
+    .sc-name { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .total-card .sc-name { color: rgba(255,255,255,0.6); }
-    .sc-total {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      margin-top: 3px;
-      line-height: 1;
-    }
+    .sc-total { font-size: 24px; font-weight: 800; color: var(--text); margin-top: 3px; line-height: 1; }
     .total-card .sc-total { color: white; }
-    .sc-count {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
+    .sc-count { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .total-card .sc-count { color: rgba(255,255,255,0.55); }
 
     /* ── LIST ── */
     .list-section { margin: 0 16px; }
     .list-empty {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 36px 20px;
-      font-size: 15px;
-      line-height: 1.6;
-      background: var(--card);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
+      text-align: center; color: var(--text-muted); padding: 36px 20px; font-size: 15px;
+      line-height: 1.6; background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
     }
     .list-item {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 13px 14px;
-      margin-bottom: 9px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      border-left: 4px solid #ccc;
-      animation: slideIn 0.22s ease;
+      background: var(--card); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px;
+      box-shadow: var(--shadow); display: flex; align-items: center; gap: 11px;
+      border-left: 4px solid #ccc; animation: slideIn 0.22s ease;
     }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .item-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .list-item.saved { opacity: 0.68; border-left-color: #86efac !important; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .item-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .item-info { flex: 1; min-width: 0; }
-    .item-main {
-      font-size: 15px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .item-main { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .item-value {
-      font-size: 19px;
-      font-weight: 800;
-      color: var(--green-dark);
-      flex-shrink: 0;
-    }
+    .item-value { font-size: 19px; font-weight: 800; color: var(--green-dark); flex-shrink: 0; }
     .btn-remove {
-      background: #fee2e2;
-      border: none;
-      color: var(--red);
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      font-size: 20px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-weight: 700;
-      -webkit-tap-highlight-color: transparent;
+      background: #fee2e2; border: none; color: var(--red); width: 34px; height: 34px;
+      border-radius: 8px; font-size: 20px; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-weight: 700; -webkit-tap-highlight-color: transparent;
     }
     .btn-remove:active { background: #fecaca; transform: scale(0.92); }
 
+    /* ── SAVED/UNSAVED BADGES ── */
+    .saved-badge {
+      display: inline-block; background: #dcfce7; color: #15803d;
+      border-radius: 6px; font-size: 11px; font-weight: 700; padding: 2px 7px; margin-top: 3px;
+    }
+    .unsaved-badge {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      border-radius: 6px; font-size: 11px; font-weight: 700; padding: 2px 7px; margin-top: 3px;
+    }
+
     /* ── SAVE BAR ── */
     .save-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: fixed; bottom: 0; left: 0; right: 0;
       padding: 12px 16px env(safe-area-inset-bottom, 0px);
-      background: rgba(240,244,248,0.95);
-      backdrop-filter: blur(8px);
-      border-top: 1px solid var(--border);
-      display: none;
+      background: rgba(240,244,248,0.95); backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border); display: none;
     }
     .save-bar.visible { display: block; }
     .btn-save {
-      width: 100%;
-      height: 56px;
-      background: var(--blue);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.15s, transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
+      width: 100%; height: 56px; background: var(--blue); color: white; border: none;
+      border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
     }
     .btn-save:active:not(:disabled) { background: var(--blue-dark); transform: scale(0.975); }
     .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
-    .badge {
-      background: white;
-      color: var(--blue);
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 800;
-      padding: 2px 9px;
-    }
+    .badge { background: white; color: var(--blue); border-radius: 10px; font-size: 13px; font-weight: 800; padding: 2px 9px; }
     .btn-save:disabled .badge { color: #94a3b8; }
+
+    /* ── OFFLINE BANNER ── */
+    .offline-banner {
+      background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px;
+      padding: 14px 16px; margin: 12px 16px; display: none;
+    }
+    .offline-banner.visible { display: block; }
+    .offline-title { font-size: 14px; font-weight: 800; color: #dc2626; margin-bottom: 4px; }
+    .offline-sub { font-size: 13px; color: #7f1d1d; line-height: 1.5; }
+    .btn-retry {
+      margin-top: 10px; background: #dc2626; color: white; border: none;
+      border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-retry:active { background: #b91c1c; }
+
+    /* ── HISTORY ── */
+    .history-section { margin: 0 16px 12px; }
+    .week-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .week-stat-card {
+      background: var(--card); border-radius: 14px; padding: 13px 14px 11px;
+      box-shadow: var(--shadow); border-left: 4px solid #ccc;
+    }
+    .week-stat-card.total-week { grid-column: 1 / -1; background: #0f2a4a; border-left: none; }
+    .wsc-name { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .total-week .wsc-name { color: rgba(255,255,255,0.55); }
+    .wsc-total { font-size: 22px; font-weight: 800; color: var(--text); margin-top: 3px; line-height: 1; }
+    .total-week .wsc-total { color: white; }
+    .wsc-count { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .total-week .wsc-count { color: rgba(255,255,255,0.5); }
+    .history-day {
+      background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .history-day-header {
+      display: flex; align-items: center; padding: 13px 16px; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; user-select: none; gap: 8px;
+    }
+    .history-day-date { flex: 1; font-size: 14px; font-weight: 700; }
+    .history-day-meta { font-size: 12px; color: var(--text-muted); }
+    .history-day-total { font-size: 15px; font-weight: 800; color: var(--green-dark); margin-left: 6px; }
+    .history-day-chevron { font-size: 13px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .history-day.open .history-day-chevron { transform: rotate(180deg); }
+    .history-day-body { display: none; padding: 0 14px 12px; border-top: 1px solid var(--border); }
+    .history-day.open .history-day-body { display: block; }
+    .history-row {
+      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .history-row-info { flex: 1; min-width: 0; }
+    .history-row-name { font-weight: 700; font-size: 13px; }
+    .history-row-unit { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .history-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .history-row-val { font-weight: 700; color: var(--green-dark); font-size: 14px; }
+    .history-loading { text-align: center; color: var(--text-muted); padding: 20px; font-size: 13px; }
+    .history-empty { text-align: center; color: var(--text-muted); padding: 16px; font-size: 13px; }
+    .pending-badge { color: #dc2626; font-size: 11px; font-weight: 700; }
+
+    /* ── PAYMENT BUTTON ── */
+    .pago-btn {
+      border: none; border-radius: 6px; font-size: 11px; font-weight: 700;
+      padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
+      -webkit-tap-highlight-color: transparent; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .pago-btn.nao-pago { background: #fee2e2; color: #dc2626; }
+    .pago-btn.pago     { background: #dcfce7; color: #15803d; }
+    .pago-btn:active   { opacity: 0.7; }
+    .pago-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     /* ── MODAL ── */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.55);
-      z-index: 200;
-      display: none;
-      align-items: flex-end;
-      backdrop-filter: blur(2px);
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 200;
+      display: none; align-items: flex-end; backdrop-filter: blur(2px);
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--card);
-      border-radius: 22px 22px 0 0;
-      width: 100%;
-      padding: 24px 20px max(20px, env(safe-area-inset-bottom));
-      max-height: 92vh;
-      overflow-y: auto;
+      background: var(--card); border-radius: 22px 22px 0 0; width: 100%;
+      padding: 24px 20px max(20px, env(safe-area-inset-bottom)); max-height: 92vh; overflow-y: auto;
     }
     .modal-handle {
-      width: 36px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 20px;
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 2px; margin: 0 auto 20px;
     }
     .modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
     .modal-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      display: block;
-      margin: 16px 0 6px;
+      font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.06em; display: block; margin: 16px 0 6px;
     }
     .modal input[type="text"], .modal input[type="password"] {
-      width: 100%;
-      height: 50px;
-      border: 2px solid var(--border);
-      border-radius: 11px;
-      padding: 0 14px;
-      font-size: 15px;
-      font-family: monospace;
-      color: var(--text);
-      background: var(--bg);
-      outline: none;
+      width: 100%; height: 50px; border: 2px solid var(--border); border-radius: 11px;
+      padding: 0 14px; font-size: 15px; font-family: monospace; color: var(--text);
+      background: var(--bg); outline: none;
     }
     .modal input:focus { border-color: var(--blue); background: white; }
     .modal-note {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 8px;
-      font-size: 13px;
-      color: #475569;
-      line-height: 1.6;
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; margin-top: 8px; font-size: 13px; color: #475569; line-height: 1.6;
     }
     .modal-note strong { color: var(--text); }
-    .modal-note code {
-      background: #e2e8f0;
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 12px;
-    }
+    .modal-note code { background: #e2e8f0; border-radius: 4px; padding: 1px 5px; font-size: 12px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
     .btn-modal-primary {
-      flex: 1;
-      height: 52px;
-      background: var(--blue);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
+      flex: 1; height: 52px; background: var(--blue); color: white; border: none;
+      border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
     .btn-modal-primary:active { background: var(--blue-dark); }
     .btn-modal-cancel {
-      height: 52px;
-      padding: 0 22px;
-      background: var(--bg);
-      color: var(--text-muted);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
+      height: 52px; padding: 0 22px; background: var(--bg); color: var(--text-muted);
+      border: 2px solid var(--border); border-radius: 12px; font-size: 16px;
+      font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── CONFIRM SHEET ── */
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 300;
+      display: none; align-items: flex-end; backdrop-filter: blur(2px);
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-sheet {
+      background: var(--card); border-radius: 22px 22px 0 0; width: 100%;
+      padding: 22px 20px max(20px, env(safe-area-inset-bottom));
+    }
+    .confirm-title { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+    .confirm-sub { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 20px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-confirm-del {
+      flex: 1; height: 52px; background: var(--red); color: white; border: none;
+      border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+    }
+    .btn-confirm-del:active { background: var(--red-dark); }
+    .btn-confirm-cancel {
+      height: 52px; padding: 0 22px; background: var(--bg); color: var(--text-muted);
+      border: 2px solid var(--border); border-radius: 12px; font-size: 16px;
+      font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
 
     /* ── SAVE RESULT ── */
     .result-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 12px;
-      border-radius: 10px;
-      background: var(--bg);
-      margin-bottom: 7px;
-      font-size: 14px;
-      font-weight: 500;
+      display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+      border-radius: 10px; background: var(--bg); margin-bottom: 7px;
+      font-size: 14px; font-weight: 500;
     }
     .result-item .ri-status { font-size: 17px; flex-shrink: 0; }
     .result-item .ri-text { flex: 1; line-height: 1.4; }
@@ -454,22 +358,10 @@
 
     /* ── TOAST ── */
     .toast {
-      position: fixed;
-      top: 76px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e293b;
-      color: white;
-      padding: 11px 22px;
-      border-radius: 22px;
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 400;
-      opacity: 0;
-      transition: opacity 0.25s;
-      pointer-events: none;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 11px 22px; border-radius: 22px;
+      font-size: 14px; font-weight: 600; z-index: 400; opacity: 0; transition: opacity 0.25s;
+      pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .toast.show { opacity: 1; }
   </style>
@@ -485,6 +377,13 @@
   </div>
   <button class="btn-settings" onclick="openSettings()" aria-label="Configurações">⚙️</button>
 </header>
+
+<!-- ══ TOKEN BANNER ══ -->
+<div id="tokenBanner" class="token-banner" style="display:none">
+  <span class="token-banner-icon">⚠️</span>
+  <span class="token-banner-text">Token do Notion não configurado. Configure antes de salvar.</span>
+  <button class="token-banner-btn" onclick="openSettings()">Configurar ›</button>
+</div>
 
 <!-- ══ FORM ══ -->
 <div class="form-card">
@@ -506,20 +405,11 @@
 
   <div class="form-row">
     <label>Unidade</label>
-    <select id="selUnidade">
-      <option value="">Selecione...</option>
-      <option>22</option><option>105</option><option>107</option>
-      <option>113</option><option>144</option><option>158</option>
-      <option>161</option><option>162</option><option>163</option>
-      <option>166</option><option>187</option><option>189</option>
-      <option>195</option><option>199</option><option>205</option>
-      <option>207</option><option>209</option><option>213</option>
-      <option>243</option><option>248</option><option>257</option>
-      <option>271</option><option>320</option><option>325</option>
-      <option>508</option><option>622</option><option>627</option>
-      <option>713</option><option>721</option><option>744</option>
-      <option>2102</option><option>8927</option><option>Landing</option>
-    </select>
+    <div class="unit-search-wrap">
+      <input type="text" id="inputUnidade" placeholder="Buscar unidade..." autocomplete="off" autocorrect="off" spellcheck="false" inputmode="search">
+      <button class="unit-clear-btn" id="unitClearBtn" tabindex="-1">×</button>
+      <div class="unit-dropdown" id="unitDropdown"></div>
+    </div>
   </div>
 
   <div class="form-grid">
@@ -548,7 +438,8 @@
     </div>
     <div class="form-row" style="margin-bottom:0">
       <label>Descrição</label>
-      <input type="text" id="inputExtraDesc" placeholder="Ex: Lavanderia" maxlength="40" style="height:52px;border:2px solid var(--border);border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.18s;width:100%">
+      <input type="text" id="inputExtraDesc" placeholder="Ex: Lavanderia" maxlength="40"
+        style="height:52px;border:2px solid var(--border);border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.18s;width:100%">
     </div>
   </div>
 
@@ -574,6 +465,21 @@
   </div>
 </div>
 
+<!-- ══ OFFLINE BANNER ══ -->
+<div class="offline-banner" id="offlineBanner">
+  <div class="offline-title">📡 Sem conexão com o Worker</div>
+  <div class="offline-sub">Não foi possível carregar o histórico. Verifique sua conexão ou se o Cloudflare Worker está ativo.</div>
+  <button class="btn-retry" onclick="loadHistory()">Tentar novamente</button>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div class="history-section" id="historySection" style="display:none">
+  <div class="section-label" style="margin-bottom:10px">Últimos 7 dias</div>
+  <div id="historyContent">
+    <div class="history-loading">⏳ Carregando histórico...</div>
+  </div>
+</div>
+
 <!-- ══ SAVE BAR ══ -->
 <div class="save-bar" id="saveBar">
   <button class="btn-save" id="btnSalvar" onclick="salvarNotion()">
@@ -588,13 +494,10 @@
     <div class="modal-handle"></div>
     <h3>⚙️ Configurações</h3>
     <p class="modal-desc">Configure uma vez — fica salvo no celular.</p>
-
     <label class="modal-label">Notion Integration Token</label>
     <input type="password" id="inputToken" placeholder="secret_..." autocomplete="off" autocorrect="off" spellcheck="false">
-
     <label class="modal-label">URL do Cloudflare Worker (proxy)</label>
     <input type="text" id="inputProxy" placeholder="https://lf-notion.seu-usuario.workers.dev" autocomplete="off" autocorrect="off" spellcheck="false">
-
     <div class="modal-note">
       <strong>Como configurar o Worker (proxy CORS):</strong><br>
       1. Acesse <strong>workers.cloudflare.com</strong> (conta grátis)<br>
@@ -602,7 +505,6 @@
       3. Copie a URL gerada e cole no campo acima<br><br>
       Sem o Worker, o Notion bloqueia chamadas diretas do celular (CORS).
     </div>
-
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeSettings()">Cancelar</button>
       <button class="btn-modal-primary" onclick="saveSettings()">Salvar</button>
@@ -623,47 +525,53 @@
   </div>
 </div>
 
+<!-- ══ CONFIRM REMOVE ══ -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-sheet">
+    <div class="modal-handle"></div>
+    <div class="confirm-title">Remover limpeza?</div>
+    <div class="confirm-sub" id="confirmText">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-confirm-del" onclick="confirmRemove()">Remover</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════ -->
 <script>
-// ─── CONFIG ─────────────────────────────────
-const DB_ID        = '0dc0408e502942e6b36a6b9b3960558d';
+// ─── CONFIG ──────────────────────────────────
+const DB_ID         = '0dc0408e502942e6b36a6b9b3960558d';
 const DEFAULT_PROXY = 'https://lf-limpezas.mariopimentel1610.workers.dev';
 
 const EMP_COLORS = {
-  'Mireyda':       '#e11d48',
-  'Inosencia':     '#0891b2',
-  'Jaime':         '#7c3aed',
-  'Rosita':        '#f97316',
-  'Maria Eugenia': '#a855f7',
-  'Francisca':     '#22c55e',
-  'Ana':           '#14b8a6'
+  'Mireyda':'#e11d48','Inosencia':'#0891b2','Jaime':'#7c3aed',
+  'Rosita':'#f97316','Maria Eugenia':'#a855f7','Francisca':'#22c55e','Ana':'#14b8a6'
 };
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_PT  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
-const MESES_PT = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
-];
-
-const DIAS_PT = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-
-// Valor padrão de limpeza por unidade
 const UNIT_VALUES = {
-  '627': 30, '320': 30, '744': 30, '721': 30, '713': 30, '508': 30,
-  '325': 35, '622': 35, '2102': 35, '22': 35
+  '627':30,'320':30,'744':30,'721':30,'713':30,'508':30,
+  '325':35,'622':35,'2102':35,'22':35
 };
 const DEFAULT_UNIT_VALUE = 15;
 
-function getUnitValue(unidade) {
-  return UNIT_VALUES[unidade] ?? DEFAULT_UNIT_VALUE;
-}
+const ALL_UNITS = [
+  '22','105','107','113','144','158','161','162','163','166',
+  '187','189','195','199','205','207','209','213','243','248',
+  '257','271','320','325','508','622','627','713','721','744',
+  '2102','8927','Landing'
+];
+
+function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
 
 // ─── ESTADO ──────────────────────────────────
-let limpezas = [];
+let limpezas       = [];
+let selectedUnit   = '';
+let pendingRemoveId = null;
 
 // ─── INIT ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -671,38 +579,31 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inputData').value = hoje;
   atualizarHeaderData(hoje);
   carregarLocal(hoje);
+  checkTokenBanner();
 
   document.getElementById('inputData').addEventListener('change', e => {
     atualizarHeaderData(e.target.value);
     carregarLocal(e.target.value);
   });
 
-  // Carrega configs salvas
   document.getElementById('inputToken').value = ls('lf_token') || '';
   document.getElementById('inputProxy').value = ls('lf_proxy') || DEFAULT_PROXY;
 
-  // Auto-fill valor ao selecionar unidade
-  document.getElementById('selUnidade').addEventListener('change', e => {
-    if (e.target.value) {
-      document.getElementById('inputValor').value = getUnitValue(e.target.value);
-    }
-  });
+  // Unit search
+  const inp = document.getElementById('inputUnidade');
+  inp.addEventListener('input',  onUnitInput);
+  inp.addEventListener('focus',  onUnitInput);
+  inp.addEventListener('blur',   () => setTimeout(() => { document.getElementById('unitDropdown').style.display = 'none'; }, 160));
+  document.getElementById('unitClearBtn').addEventListener('click', clearUnit);
 
-  // Enter no valor = adicionar
-  document.getElementById('inputValor').addEventListener('keydown', e => {
-    if (e.key === 'Enter') adicionarLimpeza();
-  });
-  document.getElementById('inputExtraDesc').addEventListener('keydown', e => {
-    if (e.key === 'Enter') adicionarLimpeza();
-  });
+  document.getElementById('inputValor').addEventListener('keydown',    e => { if (e.key==='Enter') adicionarLimpeza(); });
+  document.getElementById('inputExtraDesc').addEventListener('keydown', e => { if (e.key==='Enter') adicionarLimpeza(); });
 
-  // Fechar modais ao clicar fora
-  document.getElementById('settingsModal').addEventListener('click', function(e) {
-    if (e.target === this) closeSettings();
-  });
-  document.getElementById('resultModal').addEventListener('click', function(e) {
-    if (e.target === this) closeResult();
-  });
+  document.getElementById('settingsModal').addEventListener('click', function(e){ if(e.target===this) closeSettings(); });
+  document.getElementById('resultModal').addEventListener('click',   function(e){ if(e.target===this) closeResult();   });
+  document.getElementById('confirmModal').addEventListener('click',  function(e){ if(e.target===this) closeConfirm();  });
+
+  loadHistory();
 });
 
 // ─── UTILS ───────────────────────────────────
@@ -710,127 +611,144 @@ function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
 function atualizarHeaderData(iso) {
   if (!iso) return;
-  const [y, m, d] = iso.split('-').map(Number);
-  const dt = new Date(y, m-1, d);
-  document.getElementById('headerDate').textContent =
-    `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y,m-1,d);
+  document.getElementById('headerDate').textContent = `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
 }
-
-function getMes(iso) {
-  const m = parseInt(iso.split('-')[1], 10);
-  return MESES_PT[m - 1];
+function getMes(iso) { return MESES_PT[parseInt(iso.split('-')[1],10)-1]; }
+function fmt(val) { return '$'+Number(val).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmtData(iso) { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function ls(k,v) {
+  if(v===undefined) return localStorage.getItem(k);
+  if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v);
 }
-
-function fmt(val) {
-  return '$' + Number(val).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function fmtData(iso) {
-  if (!iso) return '';
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
-function ls(k, v) {
-  if (v === undefined) return localStorage.getItem(k);
-  if (v === null) localStorage.removeItem(k);
-  else localStorage.setItem(k, v);
-}
-
 function getKey(data) { return `lf_limpezas_${data}`; }
-
-function salvarLocal() {
-  const data = document.getElementById('inputData').value;
-  ls(getKey(data), JSON.stringify(limpezas));
-}
-
-function carregarLocal(data) {
-  const raw = ls(getKey(data));
-  limpezas = raw ? JSON.parse(raw) : [];
-  render();
-}
+function salvarLocal() { ls(getKey(document.getElementById('inputData').value), JSON.stringify(limpezas)); }
+function carregarLocal(data) { const r=ls(getKey(data)); limpezas=r?JSON.parse(r):[]; render(); }
 
 let toastTimer;
-function showToast(msg, ms = 2600) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+function showToast(msg, ms=2600) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+// ─── TOKEN BANNER ────────────────────────────
+function checkTokenBanner() {
+  document.getElementById('tokenBanner').style.display = (ls('lf_token')||'') ? 'none' : 'flex';
+}
+
+// ─── UNIT SEARCH ─────────────────────────────
+function onUnitInput() {
+  const q   = document.getElementById('inputUnidade').value.trim();
+  const dd  = document.getElementById('unitDropdown');
+  const clr = document.getElementById('unitClearBtn');
+  clr.style.display = q ? 'block' : 'none';
+
+  if (!q) { selectedUnit=''; document.getElementById('inputValor').value=''; dd.style.display='none'; return; }
+
+  const matches = ALL_UNITS.filter(u => u.toLowerCase().includes(q.toLowerCase()));
+  if (!matches.length) { dd.style.display='none'; return; }
+
+  dd.innerHTML = matches.map(u =>
+    `<div class="unit-option" onmousedown="selectUnit('${u}')">
+       <span>${u}</span><span class="unit-option-val">$${getUnitValue(u)}</span>
+     </div>`
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function selectUnit(u) {
+  selectedUnit = u;
+  document.getElementById('inputUnidade').value = u;
+  document.getElementById('unitDropdown').style.display = 'none';
+  document.getElementById('unitClearBtn').style.display = 'block';
+  document.getElementById('inputValor').value = getUnitValue(u);
+}
+
+function clearUnit() {
+  selectedUnit = '';
+  document.getElementById('inputUnidade').value = '';
+  document.getElementById('unitDropdown').style.display = 'none';
+  document.getElementById('unitClearBtn').style.display = 'none';
+  document.getElementById('inputValor').value = '';
+  document.getElementById('inputUnidade').focus();
 }
 
 // ─── ADICIONAR ───────────────────────────────
 function adicionarLimpeza() {
   const funcionaria = document.getElementById('selFuncionaria').value;
-  const unidade     = document.getElementById('selUnidade').value;
+  const unidade     = selectedUnit;
   const valorRaw    = document.getElementById('inputValor').value;
   const data        = document.getElementById('inputData').value;
   const valor       = parseFloat(valorRaw);
-  const extra       = parseFloat(document.getElementById('inputExtra').value) || 0;
+  const extra       = parseFloat(document.getElementById('inputExtra').value)||0;
   const extraDesc   = document.getElementById('inputExtraDesc').value.trim();
 
-  if (!funcionaria)            { showToast('⚠️ Selecione a funcionária');  return; }
-  if (!unidade)                { showToast('⚠️ Selecione a unidade');       return; }
-  if (!valorRaw || valor <= 0) { showToast('⚠️ Digite um valor válido');    return; }
-  if (!data)                   { showToast('⚠️ Selecione a data');          return; }
-  if (extra > 0 && !extraDesc) { showToast('⚠️ Descreva o extra');          return; }
+  if (!funcionaria)            { showToast('⚠️ Selecione a funcionária'); return; }
+  if (!unidade)                { showToast('⚠️ Selecione a unidade');     return; }
+  if (!valorRaw||valor<=0)     { showToast('⚠️ Digite um valor válido');  return; }
+  if (!data)                   { showToast('⚠️ Selecione a data');        return; }
+  if (extra>0&&!extraDesc)     { showToast('⚠️ Descreva o extra');        return; }
 
-  limpezas.unshift({ id: uid(), funcionaria, unidade, valor, extra, extraDesc, data });
-  salvarLocal();
-  render();
+  limpezas.unshift({ id:uid(), funcionaria, unidade, valor, extra, extraDesc, data, saved:false, notionId:null });
+  salvarLocal(); render();
 
-  document.getElementById('selUnidade').value    = '';
-  document.getElementById('inputValor').value    = '';
-  document.getElementById('inputExtra').value    = '';
+  clearUnit();
+  document.getElementById('inputValor').value     = '';
+  document.getElementById('inputExtra').value     = '';
   document.getElementById('inputExtraDesc').value = '';
-  document.getElementById('selUnidade').focus();
+  document.getElementById('inputUnidade').focus();
   showToast('✅ Limpeza adicionada!');
 }
 
-// ─── REMOVER ─────────────────────────────────
+// ─── REMOVER (com confirmação) ────────────────
 function removerLimpeza(id) {
-  limpezas = limpezas.filter(l => l.id !== id);
-  salvarLocal();
-  render();
+  const l = limpezas.find(x=>x.id===id);
+  if (!l) return;
+  pendingRemoveId = id;
+  document.getElementById('confirmText').textContent =
+    `${l.funcionaria} · Unidade ${l.unidade} · ${fmt((l.valor||0)+(l.extra||0))}`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm() {
+  pendingRemoveId = null;
+  document.getElementById('confirmModal').classList.remove('open');
+}
+function confirmRemove() {
+  if (!pendingRemoveId) return;
+  limpezas = limpezas.filter(l=>l.id!==pendingRemoveId);
+  pendingRemoveId = null;
+  document.getElementById('confirmModal').classList.remove('open');
+  salvarLocal(); render();
+  showToast('🗑️ Limpeza removida');
 }
 
 // ─── RENDER ──────────────────────────────────
-function render() {
-  renderLista();
-  renderSummary();
-  renderSaveBar();
-}
+function render() { renderLista(); renderSummary(); renderSaveBar(); }
 
 function renderLista() {
   const el = document.getElementById('listaLimpezas');
-  if (limpezas.length === 0) {
-    el.innerHTML = `
-      <div class="list-empty">
-        Nenhuma limpeza adicionada ainda.<br>
-        Use o formulário acima para começar.
-      </div>`;
+  if (!limpezas.length) {
+    el.innerHTML = `<div class="list-empty">Nenhuma limpeza adicionada ainda.<br>Use o formulário acima para começar.</div>`;
     return;
   }
   el.innerHTML = limpezas.map(l => {
-    const cor   = EMP_COLORS[l.funcionaria] || '#94a3b8';
-    const total = (l.valor || 0) + (l.extra || 0);
-    const extraHtml = l.extra > 0
-      ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>`
-      : '';
+    const cor   = EMP_COLORS[l.funcionaria]||'#94a3b8';
+    const total = (l.valor||0)+(l.extra||0);
+    const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
+    const statusBadge = l.saved
+      ? `<span class="saved-badge">✓ Salvo no Notion</span>`
+      : `<span class="unsaved-badge">⏳ Não salvo</span>`;
     return `
-      <div class="list-item" style="border-left-color:${cor}">
+      <div class="list-item${l.saved?' saved':''}" style="border-left-color:${cor}">
         <div class="item-dot" style="background:${cor}"></div>
         <div class="item-info">
           <div class="item-main">${l.funcionaria} — Unidade ${l.unidade}</div>
           <div class="item-sub">${fmtData(l.data)}</div>
-          ${extraHtml}
+          ${statusBadge}${extraHtml}
         </div>
         <div class="item-value">${fmt(total)}</div>
         <button class="btn-remove" onclick="removerLimpeza('${l.id}')" aria-label="Remover">×</button>
@@ -840,85 +758,65 @@ function renderLista() {
 
 function renderSummary() {
   const section = document.getElementById('summarySection');
-  if (limpezas.length === 0) { section.style.display = 'none'; return; }
+  if (!limpezas.length) { section.style.display='none'; return; }
   section.style.display = 'block';
-
-  const stats = {};
-  let totalGeral = 0, countGeral = 0;
-
-  limpezas.forEach(l => {
-    const itemTotal = (l.valor || 0) + (l.extra || 0);
-    if (!stats[l.funcionaria]) stats[l.funcionaria] = { total: 0, count: 0 };
-    stats[l.funcionaria].total += itemTotal;
-    stats[l.funcionaria].count++;
-    totalGeral += itemTotal;
-    countGeral++;
+  const stats={};let totalGeral=0,countGeral=0;
+  limpezas.forEach(l=>{
+    const t=(l.valor||0)+(l.extra||0);
+    if(!stats[l.funcionaria]) stats[l.funcionaria]={total:0,count:0};
+    stats[l.funcionaria].total+=t; stats[l.funcionaria].count++;
+    totalGeral+=t; countGeral++;
   });
-
-  const empCards = Object.entries(stats).map(([nome, s]) => {
-    const cor = EMP_COLORS[nome] || '#94a3b8';
-    const pl  = s.count !== 1 ? 's' : '';
-    return `
-      <div class="summary-card" style="border-left-color:${cor}">
-        <div class="sc-name">${nome}</div>
-        <div class="sc-total">${fmt(s.total)}</div>
-        <div class="sc-count">${s.count} limpeza${pl}</div>
-      </div>`;
+  const empCards = Object.entries(stats).map(([nome,s])=>{
+    const cor=EMP_COLORS[nome]||'#94a3b8';
+    return `<div class="summary-card" style="border-left-color:${cor}">
+      <div class="sc-name">${nome}</div>
+      <div class="sc-total">${fmt(s.total)}</div>
+      <div class="sc-count">${s.count} limpeza${s.count!==1?'s':''}</div></div>`;
   }).join('');
-
-  const nFuncs = Object.keys(stats).length;
-  const totalCard = `
-    <div class="summary-card total-card">
+  const nF=Object.keys(stats).length;
+  document.getElementById('summaryGrid').innerHTML = empCards +
+    `<div class="summary-card total-card">
       <div class="sc-name">Total do Dia</div>
       <div class="sc-total">${fmt(totalGeral)}</div>
-      <div class="sc-count">${countGeral} limpeza${countGeral !== 1 ? 's' : ''} · ${nFuncs} funcionária${nFuncs !== 1 ? 's' : ''}</div>
-    </div>`;
-
-  document.getElementById('summaryGrid').innerHTML = empCards + totalCard;
+      <div class="sc-count">${countGeral} limpeza${countGeral!==1?'s':''} · ${nF} funcionária${nF!==1?'s':''}</div></div>`;
 }
 
 function renderSaveBar() {
-  const bar = document.getElementById('saveBar');
-  document.getElementById('badgeCount').textContent = limpezas.length;
-  bar.classList.toggle('visible', limpezas.length > 0);
+  const unsaved = limpezas.filter(l=>!l.saved).length;
+  document.getElementById('badgeCount').textContent = unsaved;
+  document.getElementById('saveBar').classList.toggle('visible', unsaved>0);
 }
 
 // ─── SETTINGS ────────────────────────────────
 function openSettings()  { document.getElementById('settingsModal').classList.add('open'); }
 function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
-
 function saveSettings() {
   ls('lf_token', document.getElementById('inputToken').value.trim());
-  ls('lf_proxy', document.getElementById('inputProxy').value.trim().replace(/\/$/, ''));
-  closeSettings();
+  ls('lf_proxy', document.getElementById('inputProxy').value.trim().replace(/\/$/,''));
+  closeSettings(); checkTokenBanner(); loadHistory();
   showToast('✅ Configurações salvas!');
 }
 
 // ─── SALVAR NO NOTION ────────────────────────
 async function salvarNotion() {
-  const token    = ls('lf_token') || '';
-  const proxyUrl = ls('lf_proxy') || DEFAULT_PROXY;
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) { openSettings(); showToast('⚠️ Configure o token do Notion primeiro'); return; }
 
-  if (!token) {
-    openSettings();
-    showToast('⚠️ Configure o token do Notion primeiro');
-    return;
-  }
+  const unsaved = limpezas.filter(l=>!l.saved);
+  if (!unsaved.length) { showToast('Nada a salvar!'); return; }
 
-  // Abrir modal de resultado
-  const resultTitle    = document.getElementById('resultTitle');
-  const resultSubtitle = document.getElementById('resultSubtitle');
-  const resultList     = document.getElementById('saveResultList');
-  const btnClose       = document.getElementById('btnResultClose');
+  const rTitle    = document.getElementById('resultTitle');
+  const rSub      = document.getElementById('resultSubtitle');
+  const rList     = document.getElementById('saveResultList');
+  const btnClose  = document.getElementById('btnResultClose');
 
-  resultTitle.textContent    = 'Salvando...';
-  resultSubtitle.textContent = `Enviando ${limpezas.length} registro${limpezas.length !== 1 ? 's' : ''} para o Notion`;
-  btnClose.style.display     = 'none';
+  rTitle.textContent = 'Salvando...';
+  rSub.textContent   = `Enviando ${unsaved.length} registro${unsaved.length!==1?'s':''} para o Notion`;
+  btnClose.style.display = 'none';
 
-  // Snapshot da lista atual (para não conflitar com remoções durante o save)
-  const snapshot = [...limpezas];
-
-  resultList.innerHTML = snapshot.map(l => `
+  rList.innerHTML = unsaved.map(l=>`
     <div class="result-item" id="ri_${l.id}">
       <span class="ri-status">⏳</span>
       <span class="ri-text">${l.funcionaria} · Unidade ${l.unidade} · ${fmt(l.valor)}</span>
@@ -927,82 +825,247 @@ async function salvarNotion() {
   document.getElementById('resultModal').classList.add('open');
   document.getElementById('btnSalvar').disabled = true;
 
-  const base     = proxyUrl || 'https://api.notion.com';
-  const endpoint = `${base}/v1/pages`;
-
   const resultados = [];
-
-  for (const l of snapshot) {
+  for (const l of unsaved) {
     const riEl = document.getElementById(`ri_${l.id}`);
-    const obsText = l.extra > 0
+    const obsText = l.extra>0
       ? `${l.unidade} · ${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
       : `${l.unidade} · ${l.funcionaria}`;
-
     const body = {
       parent: { database_id: DB_ID },
       properties: {
-        'Obs':         { title: [{ text: { content: obsText } }] },
-        'Funcionária': { select: { name: l.funcionaria } },
-        'Unidade':     { select: { name: l.unidade } },
-        'Valor Unit.': { number: l.valor },
-        'Data':        { date: { start: l.data } },
-        'Mês':         { select: { name: getMes(l.data) } },
-        'Pago?':       { checkbox: false }
+        'Obs':         { title:[{text:{content:obsText}}] },
+        'Funcionária': { select:{name:l.funcionaria} },
+        'Unidade':     { select:{name:l.unidade} },
+        'Valor Unit.': { number:l.valor },
+        'Data':        { date:{start:l.data} },
+        'Mês':         { select:{name:getMes(l.data)} },
+        'Pago?':       { checkbox:false }
       }
     };
-
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization':  `Bearer ${token}`,
-          'Content-Type':   'application/json',
-          'Notion-Version': '2022-06-28'
-        },
+      const res = await fetch(`${proxyUrl}/v1/pages`, {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
         body: JSON.stringify(body)
       });
-
       if (res.ok) {
-        riEl.classList.add('ok');
-        riEl.querySelector('.ri-status').textContent = '✅';
-        resultados.push({ id: l.id, ok: true });
+        const pg = await res.json().catch(()=>({}));
+        riEl.classList.add('ok'); riEl.querySelector('.ri-status').textContent='✅';
+        resultados.push({id:l.id,ok:true,notionId:pg.id||null});
       } else {
-        const err = await res.json().catch(() => ({}));
-        riEl.classList.add('err');
-        riEl.querySelector('.ri-status').textContent = '❌';
-        riEl.querySelector('.ri-text').textContent  += ` — ${err.message || `HTTP ${res.status}`}`;
-        resultados.push({ id: l.id, ok: false });
+        const err = await res.json().catch(()=>({}));
+        riEl.classList.add('err'); riEl.querySelector('.ri-status').textContent='❌';
+        riEl.querySelector('.ri-text').textContent += ` — ${err.message||`HTTP ${res.status}`}`;
+        resultados.push({id:l.id,ok:false});
       }
-    } catch (e) {
-      riEl.classList.add('err');
-      riEl.querySelector('.ri-status').textContent = '❌';
-      riEl.querySelector('.ri-text').textContent  += ` — ${e.message}`;
-      resultados.push({ id: l.id, ok: false });
+    } catch(e) {
+      riEl.classList.add('err'); riEl.querySelector('.ri-status').textContent='❌';
+      riEl.querySelector('.ri-text').textContent += e instanceof TypeError ? ' — Sem conexão com o Worker' : ` — ${e.message}`;
+      resultados.push({id:l.id,ok:false});
     }
   }
 
-  // Remove da lista local apenas os salvos com sucesso
-  const savedIds = new Set(resultados.filter(r => r.ok).map(r => r.id));
-  limpezas = limpezas.filter(l => !savedIds.has(l.id));
+  // Marcar como salvos (não remove da lista)
+  resultados.forEach(r=>{
+    if(r.ok){ const item=limpezas.find(l=>l.id===r.id); if(item){item.saved=true;item.notionId=r.notionId;} }
+  });
   salvarLocal();
 
-  const nOk  = resultados.filter(r => r.ok).length;
-  const nErr = resultados.length - nOk;
-
-  resultTitle.textContent = nErr === 0
-    ? '✅ Tudo salvo!'
-    : `⚠️ ${nOk} salvo${nOk !== 1 ? 's' : ''}, ${nErr} erro${nErr !== 1 ? 's' : ''}`;
-  resultSubtitle.textContent = nErr === 0
+  const nOk=resultados.filter(r=>r.ok).length, nErr=resultados.length-nOk;
+  rTitle.textContent = nErr===0 ? '✅ Tudo salvo!' : `⚠️ ${nOk} salvo${nOk!==1?'s':''}, ${nErr} erro${nErr!==1?'s':''}`;
+  rSub.textContent   = nErr===0
     ? 'Todos os registros foram enviados ao Notion com sucesso.'
     : 'Itens com ❌ continuam na lista — corrija e tente novamente.';
-
-  btnClose.style.display = 'block';
-  document.getElementById('btnSalvar').disabled = false;
+  btnClose.style.display='block';
+  document.getElementById('btnSalvar').disabled=false;
   render();
 }
+function closeResult() { document.getElementById('resultModal').classList.remove('open'); }
 
-function closeResult() {
-  document.getElementById('resultModal').classList.remove('open');
+// ─── HISTORY ─────────────────────────────────
+async function loadHistory() {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  const section  = document.getElementById('historySection');
+  const content  = document.getElementById('historyContent');
+  const offline  = document.getElementById('offlineBanner');
+
+  offline.classList.remove('visible');
+  if (!token) { section.style.display='none'; return; }
+
+  section.style.display = 'block';
+  content.innerHTML = '<div class="history-loading">⏳ Carregando histórico...</div>';
+
+  const today = todayISO();
+  const dObj  = new Date(today+'T00:00:00');
+  dObj.setDate(dObj.getDate()-7);
+  const weekAgo = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+
+  try {
+    const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({
+        filter:{ and:[
+          {property:'Data',date:{on_or_after:weekAgo}},
+          {property:'Data',date:{before:today}}
+        ]},
+        sorts:[{property:'Data',direction:'descending'}],
+        page_size:100
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Group by date
+    const byDate = {};
+    for (const pg of data.results) {
+      const p = pg.properties;
+      const ds = (p['Data']?.date?.start||'').slice(0,10);
+      if (!ds) continue;
+      if (!byDate[ds]) byDate[ds]=[];
+      byDate[ds].push({
+        id:          pg.id,
+        funcionaria: p['Funcionária']?.select?.name||'?',
+        unidade:     p['Unidade']?.select?.name||'?',
+        valor:       p['Valor Unit.']?.number||0,
+        pago:        p['Pago?']?.checkbox||false
+      });
+    }
+
+    const dates = Object.keys(byDate).sort().reverse();
+
+    // Weekly stats
+    const wStats={}; let wTotal=0,wCount=0;
+    for (const items of Object.values(byDate)) {
+      for (const i of items) {
+        if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0};
+        wStats[i.funcionaria].total+=i.valor; wStats[i.funcionaria].count++;
+        wTotal+=i.valor; wCount++;
+      }
+    }
+
+    let weekHtml='';
+    if (wCount>0) {
+      const empCards = Object.entries(wStats)
+        .sort((a,b)=>b[1].total-a[1].total)
+        .map(([nome,s])=>{
+          const cor=EMP_COLORS[nome]||'#94a3b8';
+          return `<div class="week-stat-card" style="border-left-color:${cor}">
+            <div class="wsc-name">${nome}</div>
+            <div class="wsc-total">${fmt(s.total)}</div>
+            <div class="wsc-count">${s.count} limpeza${s.count!==1?'s':''}</div></div>`;
+        }).join('');
+      const nF=Object.keys(wStats).length;
+      weekHtml = `
+        <div class="section-label" style="margin-bottom:8px">Semana — por funcionária</div>
+        <div class="week-stats-grid">
+          ${empCards}
+          <div class="week-stat-card total-week">
+            <div class="wsc-name">Total da Semana</div>
+            <div class="wsc-total">${fmt(wTotal)}</div>
+            <div class="wsc-count">${wCount} limpeza${wCount!==1?'s':''} · ${nF} funcionária${nF!==1?'s':''}</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-bottom:8px;margin-top:12px">Por dia</div>`;
+    }
+
+    if (!dates.length) {
+      content.innerHTML = weekHtml+'<div class="history-empty">Nenhum registro nos últimos 7 dias.</div>';
+      return;
+    }
+
+    const daysHtml = dates.map(ds=>{
+      const items = byDate[ds];
+      const total = items.reduce((s,i)=>s+i.valor,0);
+      const [y,m,d] = ds.split('-').map(Number);
+      const dt   = new Date(y,m-1,d);
+      const label = `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
+      const nPend = items.filter(i=>!i.pago).length;
+      const pendHtml = nPend>0 ? ` · <span class="pending-badge">${nPend} pendente${nPend>1?'s':''}</span>` : '';
+
+      const rowsHtml = items.map(i=>{
+        const cor=EMP_COLORS[i.funcionaria]||'#94a3b8';
+        return `
+          <div class="history-row">
+            <div class="history-row-dot" style="background:${cor}"></div>
+            <div class="history-row-info">
+              <div class="history-row-name">${i.funcionaria}</div>
+              <div class="history-row-unit">Unidade ${i.unidade}</div>
+            </div>
+            <div class="history-row-right">
+              <span class="history-row-val">${fmt(i.valor)}</span>
+              <button class="pago-btn ${i.pago?'pago':'nao-pago'}" onclick="togglePago('${i.id}',${i.pago},this)">
+                ${i.pago?'✓ Pago':'✗ Não pago'}
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="history-day" id="hday_${ds}">
+          <div class="history-day-header" onclick="toggleHistoryDay('${ds}')">
+            <div class="history-day-date">${label}</div>
+            <div class="history-day-meta">${items.length} limpeza${items.length!==1?'s':''}${pendHtml}</div>
+            <div class="history-day-total">${fmt(total)}</div>
+            <div class="history-day-chevron">▾</div>
+          </div>
+          <div class="history-day-body">${rowsHtml}</div>
+        </div>`;
+    }).join('');
+
+    content.innerHTML = weekHtml+daysHtml;
+
+  } catch(e) {
+    section.style.display='none';
+    if (e instanceof TypeError) {
+      offline.classList.add('visible');
+    } else {
+      content.innerHTML = `<div class="history-empty">Erro ao carregar: ${e.message}</div>`;
+      section.style.display='block';
+    }
+  }
+}
+
+function toggleHistoryDay(ds) {
+  document.getElementById(`hday_${ds}`).classList.toggle('open');
+}
+
+async function togglePago(notionId, currentPago, btn) {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
+
+  btn.disabled = true;
+  const newPago = !currentPago;
+  try {
+    const res = await fetch(`${proxyUrl}/v1/pages/${notionId}`, {
+      method:'PATCH',
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({properties:{'Pago?':{checkbox:newPago}}})
+    });
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.message||`HTTP ${res.status}`); }
+
+    btn.className   = `pago-btn ${newPago?'pago':'nao-pago'}`;
+    btn.textContent = newPago ? '✓ Pago' : '✗ Não pago';
+    btn.onclick     = () => togglePago(notionId, newPago, btn);
+    showToast(newPago ? '✅ Marcado como pago!' : '↩️ Marcado como não pago');
+
+    // Atualiza contador de pendentes no cabeçalho do dia
+    const dayEl = btn.closest('.history-day');
+    if (dayEl) {
+      const nPend = dayEl.querySelectorAll('.pago-btn.nao-pago').length;
+      const metaEl = dayEl.querySelector('.history-day-meta');
+      const count  = dayEl.querySelectorAll('.history-row').length;
+      const pendHtml = nPend>0 ? ` · <span class="pending-badge">${nPend} pendente${nPend>1?'s':''}</span>` : '';
+      metaEl.innerHTML = `${count} limpeza${count!==1?'s':''}${pendHtml}`;
+    }
+  } catch(e) {
+    showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
