@@ -222,6 +222,19 @@
 
     /* ── HISTORY ── */
     .history-section { margin: 0 16px 12px; }
+    .history-filters {
+      display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto;
+      scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .history-filters::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      flex-shrink: 0; height: 34px; padding: 0 16px; border-radius: 20px;
+      border: 2px solid var(--border); background: var(--card); color: var(--text-muted);
+      font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+    }
+    .filter-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+    .filter-btn:active { opacity: 0.75; }
     .week-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .week-stat-card {
       background: var(--card); border-radius: 14px; padding: 13px 14px 11px;
@@ -474,7 +487,14 @@
 
 <!-- ══ HISTORY ══ -->
 <div class="history-section" id="historySection" style="display:none">
-  <div class="section-label" style="margin-bottom:10px">Últimos 7 dias</div>
+  <div class="section-label" style="margin-bottom:10px">Histórico</div>
+  <div class="history-filters">
+    <button class="filter-btn" id="fHoje"   onclick="setFilter('hoje')">Hoje</button>
+    <button class="filter-btn active" id="f7"  onclick="setFilter('7')">7 dias</button>
+    <button class="filter-btn" id="f15"  onclick="setFilter('15')">15 dias</button>
+    <button class="filter-btn" id="f30"  onclick="setFilter('30')">30 dias</button>
+    <button class="filter-btn" id="fMes" onclick="setFilter('mes')">Este mês</button>
+  </div>
   <div id="historyContent">
     <div class="history-loading">⏳ Carregando histórico...</div>
   </div>
@@ -569,9 +589,10 @@ const ALL_UNITS = [
 function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
 
 // ─── ESTADO ──────────────────────────────────
-let limpezas       = [];
-let selectedUnit   = '';
+let limpezas        = [];
+let selectedUnit    = '';
 let pendingRemoveId = null;
+let currentFilter   = '7';
 
 // ─── INIT ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -884,6 +905,31 @@ async function salvarNotion() {
 function closeResult() { document.getElementById('resultModal').classList.remove('open'); }
 
 // ─── HISTORY ─────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  ['hoje','7','15','30','mes'].forEach(k => {
+    document.getElementById(`f${k==='hoje'?'Hoje':k==='mes'?'Mes':k}`)
+      .classList.toggle('active', k===f);
+  });
+  loadHistory();
+}
+
+function getDateRange(filter) {
+  const today = todayISO();
+  const dObj  = new Date(today+'T00:00:00');
+  if (filter==='hoje') {
+    return { start: today, end: null }; // só hoje
+  } else if (filter==='mes') {
+    const start = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-01`;
+    return { start, end: null };
+  } else {
+    const days = parseInt(filter,10);
+    dObj.setDate(dObj.getDate()-(days-1));
+    const start = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+    return { start, end: null };
+  }
+}
+
 async function loadHistory() {
   const token    = ls('lf_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
@@ -898,9 +944,11 @@ async function loadHistory() {
   content.innerHTML = '<div class="history-loading">⏳ Carregando histórico...</div>';
 
   const today = todayISO();
-  const dObj  = new Date(today+'T00:00:00');
-  dObj.setDate(dObj.getDate()-7);
-  const weekAgo = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+  const { start } = getDateRange(currentFilter);
+  const tomorrow  = (() => {
+    const d=new Date(today+'T00:00:00'); d.setDate(d.getDate()+1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
 
   try {
     const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
@@ -908,8 +956,8 @@ async function loadHistory() {
       headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
       body: JSON.stringify({
         filter:{ and:[
-          {property:'Data',date:{on_or_after:weekAgo}},
-          {property:'Data',date:{before:today}}
+          {property:'Data',date:{on_or_after:start}},
+          {property:'Data',date:{before:tomorrow}}
         ]},
         sorts:[{property:'Data',direction:'descending'}],
         page_size:100
