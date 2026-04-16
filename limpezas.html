@@ -309,8 +309,8 @@
 
     /* ── PAYMENT BUTTON ── */
     .pago-btn {
-      border: none; border-radius: 6px; font-size: 11px; font-weight: 700;
-      padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
+      border: none; border-radius: 6px; font-size: 14px; font-weight: 700;
+      padding: 6px 10px; min-height: 38px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
       -webkit-tap-highlight-color: transparent; transition: opacity 0.15s; white-space: nowrap;
     }
     .pago-btn.nao-pago { background: #fee2e2; color: #dc2626; }
@@ -658,9 +658,9 @@ const UNIT_VALUES = {
 const DEFAULT_UNIT_VALUE = 15;
 
 const ALL_UNITS = [
-  '22','105','107','113','118','120','144','158','161','162','163','166',
-  '187','189','195','199','205','207','209','213','243','248',
-  '257','271','320','325','508','622','627','713','721','744',
+  '22','105','107','113','118','120','138','144','145','158','161','162','163','166',
+  '185','187','189','195','199','205','207','209','213','243','248',
+  '257','262','271','320','325','508','622','627','713','721','744',
   '2102','8927','Landing'
 ];
 
@@ -694,7 +694,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const inp = document.getElementById('inputUnidade');
   inp.addEventListener('input',  onUnitInput);
   inp.addEventListener('focus',  onUnitInput);
-  inp.addEventListener('blur',   () => setTimeout(() => { document.getElementById('unitDropdown').style.display = 'none'; }, 160));
+  document.addEventListener('click', e => {
+    const wrap = document.querySelector('.unit-search-wrap');
+    if (wrap && !wrap.contains(e.target)) document.getElementById('unitDropdown').style.display = 'none';
+  });
   document.getElementById('unitClearBtn').addEventListener('click', clearUnit);
 
   document.getElementById('inputValor').addEventListener('keydown',    e => { if (e.key==='Enter') adicionarLimpeza(); });
@@ -1348,17 +1351,14 @@ async function marcarTudoPago(funcionaria, btn) {
   if (!naoPagos.length) return;
 
   btn.disabled=true; btn.textContent='⏳';
-  let ok=0;
-  for (const item of naoPagos) {
-    try {
-      const res = await fetch(`${proxyUrl}/v1/pages/${item.id}`,{
-        method:'PATCH',
-        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
-        body: JSON.stringify({properties:{'Pago?':{checkbox:true}}})
-      });
-      if (res.ok) { item.pago=true; ok++; }
-    } catch(_){}
-  }
+  const results = await Promise.allSettled(naoPagos.map(item =>
+    fetch(`${proxyUrl}/v1/pages/${item.id}`, {
+      method: 'PATCH',
+      headers: {'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({properties:{'Pago?':{checkbox:true}}})
+    }).then(res => { if (res.ok) item.pago=true; else throw new Error(`HTTP ${res.status}`); })
+  ));
+  const ok = results.filter(r=>r.status==='fulfilled').length;
   showToast(`✅ ${ok} limpeza${ok!==1?'s':''} de ${funcionaria} marcada${ok!==1?'s':''} como paga`);
   loadHistory();
 }
