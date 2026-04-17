@@ -491,6 +491,14 @@
     </select>
   </div>
 
+  <div class="form-row" id="rowHoras" style="display:none">
+    <label>Horas trabalhadas</label>
+    <div class="valor-wrap">
+      <input type="number" id="inputHoras" min="0" step="0.5" placeholder="0" inputmode="decimal">
+      <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);pointer-events:none">h</span>
+    </div>
+  </div>
+
   <div class="form-row">
     <label>Unidade</label>
     <div class="unit-search-wrap">
@@ -652,17 +660,19 @@ const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
 const DIAS_PT  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
 const UNIT_VALUES = {
+  '121':30,'210':30,
   '627':30,'320':30,'744':30,'721':30,'713':30,'508':30,
   '325':35,'622':35,'2102':35,'22':35
 };
 const DEFAULT_UNIT_VALUE = 15;
 
 const ALL_UNITS = [
-  '22','105','107','113','118','120','138','144','145','158','161','162','163','166',
-  '185','187','189','195','199','205','207','209','213','243','248',
+  '22','105','107','113','118','120','121','138','144','145','158','161','162','163','166',
+  '185','187','189','195','199','205','207','209','210','213','243','248',
   '257','262','271','320','325','508','622','627','713','721','744',
   '2102','8927','Landing'
 ];
+const JAIME_HOURLY_RATE = 16.5;
 
 function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
 
@@ -699,6 +709,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wrap && !wrap.contains(e.target)) document.getElementById('unitDropdown').style.display = 'none';
   });
   document.getElementById('unitClearBtn').addEventListener('click', clearUnit);
+
+  document.getElementById('selFuncionaria').addEventListener('change', function() {
+    const isJaime = this.value === 'Jaime';
+    document.getElementById('rowHoras').style.display = isJaime ? 'block' : 'none';
+    if (!isJaime) { document.getElementById('inputHoras').value = ''; }
+  });
+
+  document.getElementById('inputHoras').addEventListener('input', function() {
+    const h = parseFloat(this.value) || 0;
+    if (h > 0) document.getElementById('inputValor').value = (h * JAIME_HOURLY_RATE).toFixed(2);
+    else document.getElementById('inputValor').value = '';
+  });
 
   document.getElementById('inputValor').addEventListener('keydown',    e => { if (e.key==='Enter') adicionarLimpeza(); });
   document.getElementById('inputExtraDesc').addEventListener('keydown', e => { if (e.key==='Enter') adicionarLimpeza(); });
@@ -850,19 +872,21 @@ function adicionarLimpeza() {
   const extra       = parseFloat(document.getElementById('inputExtra').value)||0;
   const extraDesc   = document.getElementById('inputExtraDesc').value.trim();
 
-  if (!funcionaria)            { showToast('⚠️ Selecione a funcionária'); return; }
-  if (!unidade)                { showToast('⚠️ Selecione a unidade');     return; }
-  if (!valorRaw||valor<=0)     { showToast('⚠️ Digite um valor válido');  return; }
-  if (!data)                   { showToast('⚠️ Selecione a data');        return; }
-  if (extra>0&&!extraDesc)     { showToast('⚠️ Descreva o extra');        return; }
+  if (!funcionaria)                        { showToast('⚠️ Selecione a funcionária'); return; }
+  if (!data)                               { showToast('⚠️ Selecione a data');        return; }
+  if (!unidade && (valor>0||extra==0))     { showToast('⚠️ Selecione a unidade');     return; }
+  if ((!valorRaw||valor<=0) && extra==0)   { showToast('⚠️ Digite um valor válido');  return; }
+  if (extra>0&&!extraDesc)                 { showToast('⚠️ Descreva o extra');        return; }
 
-  limpezas.unshift({ id:uid(), funcionaria, unidade, valor, extra, extraDesc, data, saved:false, notionId:null });
+  const horas = parseFloat(document.getElementById('inputHoras').value)||0;
+  limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, data, saved:false, notionId:null });
   salvarLocal(); render();
 
   clearUnit();
   document.getElementById('inputValor').value     = '';
   document.getElementById('inputExtra').value     = '';
   document.getElementById('inputExtraDesc').value = '';
+  document.getElementById('inputHoras').value     = '';
   document.getElementById('inputUnidade').focus();
   showToast('✅ Limpeza adicionada!');
 }
@@ -873,7 +897,7 @@ function removerLimpeza(id) {
   if (!l) return;
   pendingRemoveId = id;
   document.getElementById('confirmText').textContent =
-    `${l.funcionaria} · Unidade ${l.unidade} · ${fmt((l.valor||0)+(l.extra||0))}`;
+    `${l.funcionaria}${l.unidade ? ` · Unidade ${l.unidade}` : ''} · ${fmt((l.valor||0)+(l.extra||0))}`;
   document.getElementById('confirmModal').classList.add('open');
 }
 function closeConfirm() {
@@ -909,6 +933,7 @@ function renderLista() {
     const cor   = EMP_COLORS[l.funcionaria]||'#94a3b8';
     const total = (l.valor||0)+(l.extra||0);
     const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
+    const horasHtml  = l.horas>0 ? `<span class="extra-badge" style="background:#dbeafe;color:#1e40af">${l.horas}h × $${JAIME_HOURLY_RATE}</span>` : '';
     const statusBadge = l.saved
       ? `<span class="saved-badge">✓ Salvo no Notion</span>`
       : `<span class="unsaved-badge">⏳ Não salvo</span>`;
@@ -919,10 +944,10 @@ function renderLista() {
       <div class="list-item${l.saved?' saved':''}" style="border-left-color:${cor}">
         <div class="item-dot" style="background:${cor}"></div>
         <div class="item-info">
-          <div class="item-main">${l.funcionaria} — Unidade ${l.unidade}</div>
+          <div class="item-main">${l.funcionaria}${l.unidade ? ` — Unidade ${l.unidade}` : ''}</div>
           <div class="item-sub">${fmtData(l.data)}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${statusBadge}${pagoBtn}</div>
-          ${extraHtml}
+          ${horasHtml}${extraHtml}
         </div>
         <div class="item-value">${fmt(total)}</div>
         <button class="btn-remove" onclick="removerLimpeza('${l.id}')" aria-label="Remover">×</button>
@@ -994,7 +1019,7 @@ async function salvarNotion() {
   rList.innerHTML = unsaved.map(l=>`
     <div class="result-item" id="ri_${l.id}">
       <span class="ri-status">⏳</span>
-      <span class="ri-text">${l.funcionaria} · Unidade ${l.unidade} · ${fmt(l.valor)}</span>
+      <span class="ri-text">${l.funcionaria}${l.unidade ? ` · Unidade ${l.unidade}` : ''} · ${fmt((l.valor||0)+(l.extra||0))}</span>
     </div>`).join('');
 
   document.getElementById('resultModal').classList.add('open');
@@ -1003,20 +1028,22 @@ async function salvarNotion() {
   const resultados = [];
   for (const l of unsaved) {
     const riEl = document.getElementById(`ri_${l.id}`);
+    const unidPart = l.unidade ? `${l.unidade} · ` : '';
     const obsText = l.extra>0
-      ? `${l.unidade} · ${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
-      : `${l.unidade} · ${l.funcionaria}`;
+      ? `${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
+      : `${unidPart}${l.funcionaria}`;
+    const props = {
+      'Obs':         { title:[{text:{content:obsText}}] },
+      'Funcionária': { select:{name:l.funcionaria} },
+      'Valor Unit.': { number:l.valor||0 },
+      'Data':        { date:{start:l.data} },
+      'Mês':         { select:{name:getMes(l.data)} },
+      'Pago?':       { checkbox:false }
+    };
+    if (l.unidade) props['Unidade'] = { select:{name:l.unidade} };
     const body = {
       parent: { database_id: DB_ID },
-      properties: {
-        'Obs':         { title:[{text:{content:obsText}}] },
-        'Funcionária': { select:{name:l.funcionaria} },
-        'Unidade':     { select:{name:l.unidade} },
-        'Valor Unit.': { number:l.valor },
-        'Data':        { date:{start:l.data} },
-        'Mês':         { select:{name:getMes(l.data)} },
-        'Pago?':       { checkbox:false }
-      }
+      properties: props
     };
     try {
       const res = await fetch(`${proxyUrl}/v1/pages`, {
