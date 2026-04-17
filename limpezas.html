@@ -871,14 +871,13 @@ function adicionarLimpeza() {
   const valor       = parseFloat(valorRaw);
   const extra       = parseFloat(document.getElementById('inputExtra').value)||0;
   const extraDesc   = document.getElementById('inputExtraDesc').value.trim();
+  const horas       = parseFloat(document.getElementById('inputHoras').value)||0;
 
-  if (!funcionaria)                        { showToast('⚠️ Selecione a funcionária'); return; }
-  if (!data)                               { showToast('⚠️ Selecione a data');        return; }
-  if (!unidade && (valor>0||extra==0))     { showToast('⚠️ Selecione a unidade');     return; }
-  if ((!valorRaw||valor<=0) && extra==0)   { showToast('⚠️ Digite um valor válido');  return; }
-  if (extra>0&&!extraDesc)                 { showToast('⚠️ Descreva o extra');        return; }
-
-  const horas = parseFloat(document.getElementById('inputHoras').value)||0;
+  if (!funcionaria)                              { showToast('⚠️ Selecione a funcionária'); return; }
+  if (!data)                                     { showToast('⚠️ Selecione a data');        return; }
+  if (!unidade && horas==0 && (valor>0||extra==0)) { showToast('⚠️ Selecione a unidade');   return; }
+  if ((!valorRaw||valor<=0) && extra==0&&horas==0) { showToast('⚠️ Digite um valor válido'); return; }
+  if (extra>0&&!extraDesc)                       { showToast('⚠️ Descreva o extra');        return; }
   limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, data, saved:false, notionId:null });
   salvarLocal(); render();
 
