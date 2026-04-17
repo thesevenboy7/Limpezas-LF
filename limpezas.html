@@ -665,6 +665,7 @@ const UNIT_VALUES = {
   '325':35,'622':35,'2102':35,'22':35
 };
 const DEFAULT_UNIT_VALUE = 15;
+const FIXO_QUINZENAL = new Set(['Rosita']);
 
 const ALL_UNITS = [
   '22','105','107','113','118','120','121','138','144','145','158','161','162','163','166',
@@ -878,7 +879,7 @@ function adicionarLimpeza() {
   if (!unidade && horas==0 && (valor>0||extra==0)) { showToast('⚠️ Selecione a unidade');   return; }
   if ((!valorRaw||valor<=0) && extra==0&&horas==0) { showToast('⚠️ Digite um valor válido'); return; }
   if (extra>0&&!extraDesc)                       { showToast('⚠️ Descreva o extra');        return; }
-  const tipo = funcionaria === 'Jaime' ? 'Supervisão' : 'Limpeza';
+  const tipo = funcionaria === 'Jaime' ? 'Supervisão' : FIXO_QUINZENAL.has(funcionaria) ? 'Fixo' : 'Limpeza';
   limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, tipo, data, saved:false, notionId:null });
   salvarLocal(); render();
 
@@ -935,7 +936,9 @@ function renderLista() {
     const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
     const horasHtml  = l.horas>0 ? `<span class="extra-badge" style="background:#dbeafe;color:#1e40af">${l.horas}h × $${JAIME_HOURLY_RATE}</span>` : '';
     const tipoLabel  = (l.tipo||'Limpeza') === 'Supervisão'
-      ? `<span class="extra-badge" style="background:#ede9fe;color:#6d28d9">Supervisão</span>` : '';
+      ? `<span class="extra-badge" style="background:#ede9fe;color:#6d28d9">Supervisão</span>`
+      : FIXO_QUINZENAL.has(l.funcionaria)
+        ? `<span class="extra-badge" style="background:#fff7ed;color:#c2410c">Fixo Quinzenal</span>` : '';
     const statusBadge = l.saved
       ? `<span class="saved-badge">✓ Salvo no Notion</span>`
       : `<span class="unsaved-badge">⏳ Não salvo</span>`;
@@ -971,10 +974,11 @@ function renderSummary() {
   });
   const empCards = Object.entries(stats).map(([nome,s])=>{
     const cor=EMP_COLORS[nome]||'#94a3b8';
+    const label = nome==='Jaime' ? `supervisão${s.count!==1?'':''}` : `limpeza${s.count!==1?'s':''}`;
     return `<div class="summary-card" style="border-left-color:${cor}">
       <div class="sc-name">${nome}</div>
       <div class="sc-total">${fmt(s.total)}</div>
-      <div class="sc-count">${s.count} limpeza${s.count!==1?'s':''}</div></div>`;
+      <div class="sc-count">${s.count} ${label}</div></div>`;
   }).join('');
   const nF=Object.keys(stats).length;
   document.getElementById('summaryGrid').innerHTML = empCards +
@@ -1031,7 +1035,7 @@ async function salvarNotion() {
   for (const l of unsaved) {
     const riEl = document.getElementById(`ri_${l.id}`);
     const unidPart = l.unidade ? `${l.unidade} · ` : '';
-    const tipoPart = (l.tipo||'Limpeza') === 'Supervisão' ? '[Supervisão] ' : '';
+    const tipoPart = (l.tipo||'Limpeza') === 'Supervisão' ? '[Supervisão] ' : l.tipo==='Fixo' ? '[Fixo Quinzenal] ' : '';
     const obsText = l.extra>0
       ? `${tipoPart}${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
       : `${tipoPart}${unidPart}${l.funcionaria}`;
@@ -1228,9 +1232,10 @@ async function loadHistory() {
         .sort((a,b)=>b[1].total-a[1].total)
         .map(([nome,s])=>{
           const cor=EMP_COLORS[nome]||'#94a3b8';
+          const wLabel = nome==='Jaime' ? 'supervisão' : `limpeza${s.count!==1?'s':''}`;
           return `<div class="week-stat-card" style="border-left-color:${cor}">
             <div class="wsc-name">${nome}</div><div class="wsc-total">${fmt(s.total)}</div>
-            <div class="wsc-count">${s.count} limpeza${s.count!==1?'s':''}</div></div>`;
+            <div class="wsc-count">${s.count} ${wLabel}</div></div>`;
         }).join('');
       const nF=Object.keys(wStats).length;
       weekHtml = `
@@ -1342,11 +1347,18 @@ function copiarResumo() {
 
   let txt = `🧹 *LF Services — ${periodo}*\n\n`;
   for (const [nome, items] of Object.entries(byEmp).sort()) {
-    const total   = items.reduce((s,i)=>s+i.valor,0);
-    const pendente= items.filter(i=>!i.pago).reduce((s,i)=>s+i.valor,0);
-    txt += `👤 *${nome}*\n`;
+    const total   = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+    const pendente= items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+    const isJaime = nome === 'Jaime';
+    const isFixo  = FIXO_QUINZENAL.has(nome);
+    const icone   = isJaime ? '👷' : isFixo ? '📋' : '🧹';
+    txt += `${icone} *${nome}*${isFixo ? ' _(Fixo Quinzenal)_' : ''}\n`;
     [...items].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{
-      txt += `  ${fmtData(i.data)} · Unid.${i.unidade} · $${i.valor} · ${i.pago?'✓':'✗'}\n`;
+      const detalhe = isJaime
+        ? `${i.horas||0}h trabalhadas`
+        : i.unidade ? `Unid.${i.unidade}` : 'Extra';
+      const valorTotal = (i.valor||0)+(i.extra||0);
+      txt += `  ${fmtData(i.data)} · ${detalhe} · $${valorTotal} · ${i.pago?'✓':'✗'}\n`;
     });
     txt += `  *Total: $${total}*`;
     txt += pendente>0 ? ` · 💰 $${pendente} pendente\n\n` : ` · ✅ Tudo pago\n\n`;
