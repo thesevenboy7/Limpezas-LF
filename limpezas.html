@@ -878,7 +878,8 @@ function adicionarLimpeza() {
   if (!unidade && horas==0 && (valor>0||extra==0)) { showToast('⚠️ Selecione a unidade');   return; }
   if ((!valorRaw||valor<=0) && extra==0&&horas==0) { showToast('⚠️ Digite um valor válido'); return; }
   if (extra>0&&!extraDesc)                       { showToast('⚠️ Descreva o extra');        return; }
-  limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, data, saved:false, notionId:null });
+  const tipo = funcionaria === 'Jaime' ? 'Supervisão' : 'Limpeza';
+  limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, tipo, data, saved:false, notionId:null });
   salvarLocal(); render();
 
   clearUnit();
@@ -933,6 +934,8 @@ function renderLista() {
     const total = (l.valor||0)+(l.extra||0);
     const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
     const horasHtml  = l.horas>0 ? `<span class="extra-badge" style="background:#dbeafe;color:#1e40af">${l.horas}h × $${JAIME_HOURLY_RATE}</span>` : '';
+    const tipoLabel  = (l.tipo||'Limpeza') === 'Supervisão'
+      ? `<span class="extra-badge" style="background:#ede9fe;color:#6d28d9">Supervisão</span>` : '';
     const statusBadge = l.saved
       ? `<span class="saved-badge">✓ Salvo no Notion</span>`
       : `<span class="unsaved-badge">⏳ Não salvo</span>`;
@@ -946,7 +949,7 @@ function renderLista() {
           <div class="item-main">${l.funcionaria}${l.unidade ? ` — Unidade ${l.unidade}` : ''}</div>
           <div class="item-sub">${fmtData(l.data)}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${statusBadge}${pagoBtn}</div>
-          ${horasHtml}${extraHtml}
+          ${tipoLabel}${horasHtml}${extraHtml}
         </div>
         <div class="item-value">${fmt(total)}</div>
         <button class="btn-remove" onclick="removerLimpeza('${l.id}')" aria-label="Remover">×</button>
@@ -1028,9 +1031,10 @@ async function salvarNotion() {
   for (const l of unsaved) {
     const riEl = document.getElementById(`ri_${l.id}`);
     const unidPart = l.unidade ? `${l.unidade} · ` : '';
+    const tipoPart = (l.tipo||'Limpeza') === 'Supervisão' ? '[Supervisão] ' : '';
     const obsText = l.extra>0
-      ? `${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
-      : `${unidPart}${l.funcionaria}`;
+      ? `${tipoPart}${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
+      : `${tipoPart}${unidPart}${l.funcionaria}`;
     const props = {
       'Obs':         { title:[{text:{content:obsText}}] },
       'Funcionária': { select:{name:l.funcionaria} },
