@@ -1186,44 +1186,62 @@ function closeConfirm() {
   pendingRemoveId = null;
   document.getElementById('confirmModal').classList.remove('open');
 }
+async function archiveNotion(notionId) {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  if (!token) return true;
+  const res = await fetch(`${proxyUrl}/v1/pages/${notionId}`, {
+    method:'PATCH',
+    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+    body: JSON.stringify({archived:true})
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    showToast(`❌ Falha ao arquivar: ${e.message||res.status}`);
+    return false;
+  }
+  return true;
+}
+
 async function confirmRemove() {
   if (!pendingRemoveId) return;
   const id = pendingRemoveId;
   pendingRemoveId = null;
 
-  const inLimpezas = limpezas.some(l=>l.id===id);
-  if (inLimpezas) {
+  const localItem = limpezas.find(l=>l.id===id);
+
+  // Item local já salvo no Notion → arquivar primeiro
+  if (localItem?.notionId) {
+    try {
+      const ok = await archiveNotion(localItem.notionId);
+      if (!ok) { document.getElementById('confirmModal').classList.remove('open'); return; }
+    } catch(e) {
+      showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+      document.getElementById('confirmModal').classList.remove('open');
+      return;
+    }
+  }
+
+  if (localItem) {
     limpezas = limpezas.filter(l=>l.id!==id);
     salvarLocal();
     document.getElementById('confirmModal').classList.remove('open');
     render();
-    showToast('🗑️ Removido');
+    showToast(localItem.notionId ? '🗑️ Removido do Notion' : '🗑️ Removido');
+    if (localItem.notionId) loadHistory();
     return;
   }
 
-  // Item do Notion → arquivar via PATCH antes de remover visualmente
+  // Item veio direto do Notion (não está em limpezas[])
   const item = notionHojeItems.find(i=>i.id===id);
   if (item?.notionId) {
-    const token    = ls('lf_token')||'';
-    const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
-    if (token) {
-      try {
-        const res = await fetch(`${proxyUrl}/v1/pages/${item.notionId}`, {
-          method:'PATCH',
-          headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
-          body: JSON.stringify({archived:true})
-        });
-        if (!res.ok) {
-          const e = await res.json().catch(()=>({}));
-          showToast(`❌ Falha ao arquivar: ${e.message||res.status}`);
-          document.getElementById('confirmModal').classList.remove('open');
-          return;
-        }
-      } catch(e) {
-        showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
-        document.getElementById('confirmModal').classList.remove('open');
-        return;
-      }
+    try {
+      const ok = await archiveNotion(item.notionId);
+      if (!ok) { document.getElementById('confirmModal').classList.remove('open'); return; }
+    } catch(e) {
+      showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+      document.getElementById('confirmModal').classList.remove('open');
+      return;
     }
   }
   notionHojeItems = notionHojeItems.filter(i=>i.id!==id);
