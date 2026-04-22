@@ -1174,7 +1174,7 @@ function adicionarLimpeza() {
 
 // ─── REMOVER (com confirmação) ────────────────
 function removerLimpeza(id) {
-  const l = limpezas.find(x=>x.id===id) || notionHojeItems.find(x=>x.id===id);
+  const l = limpezas.find(x=>x.id===id) || notionHojeItems.find(x=>x.id===id) || allHistoryItems.find(x=>x.id===id);
   if (!l) return;
   pendingRemoveId = id;
   const detalhe = l.unidade ? ` · Unidade ${l.unidade}` : (l.descricao ? ` · ${l.descricao}` : '');
@@ -1232,23 +1232,46 @@ async function confirmRemove() {
     return;
   }
 
-  // Item veio direto do Notion (não está em limpezas[])
-  const item = notionHojeItems.find(i=>i.id===id);
-  if (item?.notionId) {
+  // Item do dia atual vindo do Notion
+  const hojeItem = notionHojeItems.find(i=>i.id===id);
+  if (hojeItem) {
+    if (hojeItem.notionId) {
+      try {
+        const ok = await archiveNotion(hojeItem.notionId);
+        if (!ok) { document.getElementById('confirmModal').classList.remove('open'); return; }
+      } catch(e) {
+        showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+        document.getElementById('confirmModal').classList.remove('open');
+        return;
+      }
+    }
+    notionHojeItems = notionHojeItems.filter(i=>i.id!==id);
+    document.getElementById('confirmModal').classList.remove('open');
+    render();
+    showToast('🗑️ Removido do Notion');
+    loadHistory();
+    return;
+  }
+
+  // Item do histórico (dias anteriores)
+  const histItem = allHistoryItems.find(i=>i.id===id);
+  if (histItem) {
     try {
-      const ok = await archiveNotion(item.notionId);
+      const ok = await archiveNotion(id);
       if (!ok) { document.getElementById('confirmModal').classList.remove('open'); return; }
     } catch(e) {
       showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
       document.getElementById('confirmModal').classList.remove('open');
       return;
     }
+    allHistoryItems = allHistoryItems.filter(i=>i.id!==id);
+    document.getElementById('confirmModal').classList.remove('open');
+    showToast('🗑️ Removido do Notion');
+    loadHistory();
+    return;
   }
-  notionHojeItems = notionHojeItems.filter(i=>i.id!==id);
+
   document.getElementById('confirmModal').classList.remove('open');
-  render();
-  showToast('🗑️ Removido do Notion');
-  loadHistory();
 }
 
 // ─── RENDER ──────────────────────────────────
@@ -1651,6 +1674,7 @@ async function loadHistory() {
               <button class="pago-btn ${i.pago?'pago':'nao-pago'}" onclick="togglePago('${i.id}',${i.pago},this)">
                 ${i.pago?'✓ Pago':'✗ Não pago'}
               </button>
+              <button class="btn-remove" onclick="removerLimpeza('${i.id}')" aria-label="Remover" style="width:28px;height:28px;font-size:16px">×</button>
             </div>
           </div>`;
       }).join('');
