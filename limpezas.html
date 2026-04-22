@@ -452,6 +452,38 @@
       pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .toast.show { opacity: 1; }
+
+    /* ── DIVIDA CARD JAIME ── */
+    .divida-card {
+      margin-bottom: 14px; background: #ede9fe; border-radius: 14px;
+      padding: 14px 16px; border: 1.5px solid #c4b5fd;
+    }
+    .divida-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .divida-card-title { font-size: 13px; font-weight: 800; color: #6d28d9; }
+    .divida-card-chev { font-size: 13px; color: #7c3aed; transition: transform 0.2s; }
+    .divida-card.collapsed .divida-card-chev { transform: rotate(-90deg); }
+    .divida-card.collapsed .divida-card-body { display: none; }
+    .divida-card-body { margin-top: 10px; }
+    .divida-line { font-size: 13px; color: #4c1d95; line-height: 1.9; }
+    .divida-line strong { color: #4c1d95; }
+    .btn-divida {
+      margin-top: 10px; width: 100%; height: 42px; background: #7c3aed;
+      color: white; border: none; border-radius: 10px; font-size: 13px;
+      font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-divida:active { background: #6d28d9; }
+
+    /* ── DYNAMIC BADGE ── */
+    .dyn-badge {
+      border-radius: 8px; padding: 8px 12px; font-size: 12px;
+      font-weight: 700; text-align: center;
+    }
+    .dyn-badge.fixo  { background: #fef3c7; color: #92400e; }
+    .dyn-badge.darwin{ background: #dcfce7; color: #15803d; }
+    .dyn-badge.juan  { background: #e0f2fe; color: #0369a1; }
   </style>
 </head>
 <body>
@@ -475,10 +507,28 @@
 
 <!-- ══ FORM ══ -->
 <div class="form-card">
-  <div class="section-label">Nova Limpeza</div>
+  <div class="section-label">Nova Entrada</div>
+
+  <!-- Card Dívida Jaime (só visível com Jaime selecionado) -->
+  <div id="jaimeDividaCard" class="divida-card" style="display:none">
+    <div class="divida-card-head" onclick="toggleJaimeDivida()">
+      <span class="divida-card-title">💳 Dívida Jaime</span>
+      <span class="divida-card-chev">▾</span>
+    </div>
+    <div class="divida-card-body">
+      <div class="divida-line">Total: <strong>$3,500</strong></div>
+      <div class="divida-line">Descontado: <strong id="jdDescontado">$0</strong> (<span id="jdVezes">0</span>× $50)</div>
+      <div class="divida-line">Saldo devedor: <strong id="jdSaldo">$3,500</strong></div>
+      <div class="divida-line" style="font-size:12px;opacity:0.7;margin-top:2px">Próximo desconto: $50 esta semana</div>
+      <button class="btn-divida" onclick="registrarDescontoJaime()">Registrar desconto desta semana ($50)</button>
+    </div>
+  </div>
+
+  <!-- Badge dinâmico -->
+  <div id="dynamicBadge" style="display:none;margin-bottom:10px"></div>
 
   <div class="form-row">
-    <label>Funcionária</label>
+    <label>Funcionário</label>
     <select id="selFuncionaria">
       <option value="">Selecione...</option>
       <option>Mireyda</option>
@@ -489,9 +539,12 @@
       <option>Francisca</option>
       <option>Ana</option>
       <option>Lany Franca</option>
+      <option>Darwin</option>
+      <option>Juan</option>
     </select>
   </div>
 
+  <!-- Horas (Jaime) -->
   <div class="form-row" id="rowHoras" style="display:none">
     <label>Horas trabalhadas</label>
     <div class="valor-wrap">
@@ -500,7 +553,8 @@
     </div>
   </div>
 
-  <div class="form-row">
+  <!-- Unidade (limpezas) -->
+  <div class="form-row" id="rowUnidade">
     <label>Unidade</label>
     <div class="unit-search-wrap">
       <input type="text" id="inputUnidade" placeholder="Buscar unidade..." autocomplete="off" autocorrect="off" spellcheck="false" inputmode="search">
@@ -509,9 +563,21 @@
     </div>
   </div>
 
+  <!-- Descrição do Serviço (Darwin / Juan) -->
+  <div class="form-row" id="rowDescricao" style="display:none">
+    <label>Descrição do Serviço</label>
+    <input type="text" id="inputDescricao" placeholder="Ex: Corte de grama + irrigação" maxlength="80">
+  </div>
+
+  <!-- Unidades atendidas (Juan) -->
+  <div class="form-row" id="rowUnidadesAtendidas" style="display:none">
+    <label>Unidades atendidas</label>
+    <input type="text" id="inputUnidadesAtendidas" placeholder="Ex: 105, 162, 199" maxlength="80">
+  </div>
+
   <div class="form-grid">
     <div class="form-row" style="margin-bottom:0">
-      <label>Valor Limpeza</label>
+      <label id="labelValor">Valor Limpeza</label>
       <div class="valor-wrap">
         <span class="valor-prefix">$</span>
         <input type="number" id="inputValor" min="0" step="1" placeholder="0" inputmode="numeric">
@@ -523,20 +589,22 @@
     </div>
   </div>
 
-  <div class="extra-divider">+ Extra (opcional)</div>
-
-  <div class="form-grid">
-    <div class="form-row" style="margin-bottom:0">
-      <label>Valor Extra</label>
-      <div class="valor-wrap">
-        <span class="valor-prefix">$</span>
-        <input type="number" id="inputExtra" min="0" step="1" placeholder="0" inputmode="numeric">
+  <!-- Extra section (limpezas + Jaime) -->
+  <div id="extraSection">
+    <div class="extra-divider">+ Extra (opcional)</div>
+    <div class="form-grid">
+      <div class="form-row" style="margin-bottom:0">
+        <label>Valor Extra</label>
+        <div class="valor-wrap">
+          <span class="valor-prefix">$</span>
+          <input type="number" id="inputExtra" min="0" step="1" placeholder="0" inputmode="numeric">
+        </div>
       </div>
-    </div>
-    <div class="form-row" style="margin-bottom:0">
-      <label>Descrição</label>
-      <input type="text" id="inputExtraDesc" placeholder="Ex: Lavanderia" maxlength="40"
-        style="height:52px;border:2px solid var(--border);border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.18s;width:100%">
+      <div class="form-row" style="margin-bottom:0">
+        <label>Descrição</label>
+        <input type="text" id="inputExtraDesc" placeholder="Ex: Lavanderia" maxlength="40"
+          style="height:52px;border:2px solid var(--border);border-radius:12px;padding:0 14px;font-size:15px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.18s;width:100%">
+      </div>
     </div>
   </div>
 
@@ -553,10 +621,10 @@
 
 <!-- ══ LIST ══ -->
 <div class="list-section">
-  <div class="section-label" style="margin-bottom:10px">Registradas hoje</div>
+  <div class="section-label" style="margin-bottom:10px">Registros do dia</div>
   <div id="listaLimpezas">
     <div class="list-empty">
-      Nenhuma limpeza adicionada ainda.<br>
+      Nenhum registro adicionado ainda.<br>
       Use o formulário acima para começar.
     </div>
   </div>
@@ -636,7 +704,7 @@
 <div class="confirm-overlay" id="confirmModal">
   <div class="confirm-sheet">
     <div class="modal-handle"></div>
-    <div class="confirm-title">Remover limpeza?</div>
+    <div class="confirm-title">Remover registro?</div>
     <div class="confirm-sub" id="confirmText">Esta ação não pode ser desfeita.</div>
     <div class="confirm-actions">
       <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancelar</button>
@@ -653,11 +721,33 @@
 const DB_ID         = '0dc0408e502942e6b36a6b9b3960558d';
 const DEFAULT_PROXY = 'https://lf-limpezas.mariopimentel1610.workers.dev';
 
-const EMP_COLORS = {
-  'Mireyda':'#e11d48','Inosencia':'#0891b2','Jaime':'#7c3aed',
-  'Rosita':'#f97316','Maria Eugenia':'#a855f7','Francisca':'#22c55e','Ana':'#14b8a6',
-  'Lany Franca':'#ec4899'
+// ─── FUNCIONÁRIOS ─────────────────────────────
+const FUNCIONARIOS = {
+  'Mireyda':       { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Inosencia':     { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Francisca':     { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Ana':           { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Maria Eugenia': { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Lany Franca':   { tipo: 'limpeza',     pagamento: 'por_unidade' },
+  'Rosita':        { tipo: 'limpeza',     pagamento: 'fixo_quinzenal', valorFixo: 1200, observacao: 'Fixo — não contabilizado como custo variável' },
+  'Jaime':         { tipo: 'supervisao',  pagamento: 'por_hora', valorHora: 16.50, divida: { total: 3500, descontado: 250, descontoSemanal: 50 } },
+  'Darwin':        { tipo: 'landscaping', pagamento: 'fixo_quinzenal', valorFixo: 500 },
+  'Juan':          { tipo: 'landscaping', pagamento: 'avulso' }
 };
+
+const EMP_COLORS = {
+  'Mireyda':       '#e11d48',
+  'Inosencia':     '#0891b2',
+  'Jaime':         '#7c3aed',
+  'Rosita':        '#f97316',
+  'Maria Eugenia': '#a855f7',
+  'Francisca':     '#22c55e',
+  'Ana':           '#14b8a6',
+  'Lany Franca':   '#ec4899',
+  'Darwin':        '#16a34a',
+  'Juan':          '#0891b2'
+};
+
 const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS_PT  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
@@ -667,7 +757,6 @@ const UNIT_VALUES = {
   '325':35,'622':35,'2102':35,'22':35
 };
 const DEFAULT_UNIT_VALUE = 15;
-const FIXO_QUINZENAL = new Set(['Rosita']);
 
 const ALL_UNITS = [
   '22','105','107','113','118','120','121','130','138','144','145','158','161','162','163','166',
@@ -675,14 +764,24 @@ const ALL_UNITS = [
   '257','259','262','271','320','325','508','622','627','713','721','743','744',
   '2102','8927','Landing'
 ];
-const JAIME_HOURLY_RATE = 16.5;
 
 function getUnitValue(u) { return UNIT_VALUES[u] ?? DEFAULT_UNIT_VALUE; }
+
+// Helpers de tipo (derivados de FUNCIONARIOS)
+function tipoDoFuncionario(nome) {
+  const c = FUNCIONARIOS[nome];
+  if (!c) return 'Limpeza';
+  if (c.tipo === 'supervisao') return 'Supervisão';
+  if (c.pagamento === 'fixo_quinzenal') return 'Fixo';
+  if (c.tipo === 'landscaping') return 'Landscaping';
+  return 'Limpeza';
+}
+function isFixoQuinzenal(nome) { return FUNCIONARIOS[nome]?.pagamento === 'fixo_quinzenal'; }
 
 // ─── ESTADO ──────────────────────────────────
 let limpezas         = [];
 let notionHojeItems  = [];
-let allHistoryItems  = [];   // todos os itens do histórico atual (para copiar/resumo)
+let allHistoryItems  = [];
 let selectedUnit     = '';
 let pendingRemoveId  = null;
 let currentFilter    = '7';
@@ -694,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarHeaderData(hoje);
   carregarLocal(hoje);
   checkTokenBanner();
+  atualizarCardDivida();
 
   document.getElementById('inputData').addEventListener('change', e => {
     atualizarHeaderData(e.target.value);
@@ -714,19 +814,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('unitClearBtn').addEventListener('click', clearUnit);
 
   document.getElementById('selFuncionaria').addEventListener('change', function() {
-    const isJaime = this.value === 'Jaime';
-    document.getElementById('rowHoras').style.display = isJaime ? 'block' : 'none';
-    if (!isJaime) { document.getElementById('inputHoras').value = ''; }
+    atualizarFormulario(this.value);
   });
 
   document.getElementById('inputHoras').addEventListener('input', function() {
+    const cfg = FUNCIONARIOS[document.getElementById('selFuncionaria').value];
     const h = parseFloat(this.value) || 0;
-    if (h > 0) document.getElementById('inputValor').value = (h * JAIME_HOURLY_RATE).toFixed(2);
-    else document.getElementById('inputValor').value = '';
+    if (h > 0 && cfg?.valorHora) {
+      document.getElementById('inputValor').value = (h * cfg.valorHora).toFixed(2);
+    } else {
+      document.getElementById('inputValor').value = '';
+    }
   });
 
-  document.getElementById('inputValor').addEventListener('keydown',    e => { if (e.key==='Enter') adicionarLimpeza(); });
+  document.getElementById('inputValor').addEventListener('keydown',     e => { if (e.key==='Enter') adicionarLimpeza(); });
   document.getElementById('inputExtraDesc').addEventListener('keydown', e => { if (e.key==='Enter') adicionarLimpeza(); });
+  document.getElementById('inputDescricao').addEventListener('keydown', e => { if (e.key==='Enter') adicionarLimpeza(); });
 
   document.getElementById('settingsModal').addEventListener('click', function(e){ if(e.target===this) closeSettings(); });
   document.getElementById('resultModal').addEventListener('click',   function(e){ if(e.target===this) closeResult();   });
@@ -734,6 +837,130 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadHistory();
 });
+
+// Aviso de saída com rascunhos pendentes
+window.addEventListener('beforeunload', function(e) {
+  const pendentes = limpezas.filter(l => !l.saved).length;
+  if (pendentes > 0) {
+    const msg = `Há ${pendentes} registro${pendentes!==1?'s':''} não salvo${pendentes!==1?'s':''} no Notion. Sair mesmo assim?`;
+    e.preventDefault();
+    e.returnValue = msg;
+    return msg;
+  }
+});
+
+// ─── FORMULÁRIO DINÂMICO ─────────────────────
+function atualizarFormulario(nome) {
+  const cfg = FUNCIONARIOS[nome] || null;
+
+  // Reset
+  document.getElementById('jaimeDividaCard').style.display = 'none';
+  document.getElementById('dynamicBadge').style.display    = 'none';
+  document.getElementById('dynamicBadge').innerHTML        = '';
+  document.getElementById('rowHoras').style.display        = 'none';
+  document.getElementById('rowUnidade').style.display      = 'block';
+  document.getElementById('rowDescricao').style.display    = 'none';
+  document.getElementById('rowUnidadesAtendidas').style.display = 'none';
+  document.getElementById('extraSection').style.display    = 'block';
+  document.getElementById('inputValor').readOnly           = false;
+  document.getElementById('inputValor').style.opacity      = '1';
+  document.getElementById('labelValor').textContent        = 'Valor Limpeza';
+  document.getElementById('inputExtraDesc').placeholder    = 'Ex: Lavanderia';
+
+  // Limpa campos ao trocar
+  clearFormFields();
+
+  if (!cfg) return;
+
+  if (cfg.tipo === 'limpeza') {
+    if (cfg.pagamento === 'fixo_quinzenal') {
+      // Rosita
+      const b = document.getElementById('dynamicBadge');
+      b.style.display = 'block';
+      b.innerHTML = `<div class="dyn-badge fixo">📋 Fixo Quinzenal $${cfg.valorFixo.toLocaleString('en-US')} — registro de volume</div>`;
+    }
+    // form padrão de limpeza
+  } else if (cfg.tipo === 'supervisao') {
+    // Jaime
+    document.getElementById('rowHoras').style.display    = 'block';
+    document.getElementById('rowUnidade').style.display  = 'none';
+    document.getElementById('jaimeDividaCard').style.display = 'block';
+    document.getElementById('labelValor').textContent    = 'Valor (auto)';
+    document.getElementById('inputExtraDesc').placeholder = 'Ex: Quarto 107';
+    atualizarCardDivida();
+  } else if (cfg.tipo === 'landscaping') {
+    document.getElementById('rowUnidade').style.display     = 'none';
+    document.getElementById('rowDescricao').style.display   = 'block';
+    document.getElementById('extraSection').style.display   = 'none';
+
+    if (cfg.pagamento === 'fixo_quinzenal') {
+      // Darwin
+      const b = document.getElementById('dynamicBadge');
+      b.style.display = 'block';
+      b.innerHTML = `<div class="dyn-badge darwin">🌿 Fixo Quinzenal $${cfg.valorFixo}</div>`;
+      document.getElementById('inputValor').value           = cfg.valorFixo;
+      document.getElementById('inputValor').readOnly        = true;
+      document.getElementById('inputValor').style.opacity   = '0.7';
+      document.getElementById('labelValor').textContent     = 'Valor Fixo';
+    } else if (cfg.pagamento === 'avulso') {
+      // Juan
+      document.getElementById('rowUnidadesAtendidas').style.display = 'block';
+      const b = document.getElementById('dynamicBadge');
+      b.style.display = 'block';
+      b.innerHTML = `<div class="dyn-badge juan">🌿 Avulso — Landscaping/Irrigação</div>`;
+      document.getElementById('labelValor').textContent = 'Valor';
+    }
+  }
+}
+
+function clearFormFields() {
+  selectedUnit = '';
+  document.getElementById('inputUnidade').value           = '';
+  document.getElementById('unitDropdown').style.display   = 'none';
+  document.getElementById('unitClearBtn').style.display   = 'none';
+  document.getElementById('inputValor').value             = '';
+  document.getElementById('inputHoras').value             = '';
+  document.getElementById('inputExtra').value             = '';
+  document.getElementById('inputExtraDesc').value         = '';
+  document.getElementById('inputDescricao').value         = '';
+  document.getElementById('inputUnidadesAtendidas').value = '';
+}
+
+// ─── DÍVIDA JAIME ────────────────────────────
+function toggleJaimeDivida() {
+  document.getElementById('jaimeDividaCard').classList.toggle('collapsed');
+}
+
+function getDescontadoJaime() {
+  const cfg = FUNCIONARIOS['Jaime'].divida;
+  const stored = ls('lf_jaime_descontado');
+  // Se ainda não inicializado, usa valor padrão do config (250)
+  if (stored === null || stored === undefined) {
+    ls('lf_jaime_descontado', String(cfg.descontado));
+    return cfg.descontado;
+  }
+  return parseInt(stored, 10) || 0;
+}
+
+function atualizarCardDivida() {
+  const cfg = FUNCIONARIOS['Jaime'].divida;
+  const descontado = getDescontadoJaime();
+  const saldo = cfg.total - descontado;
+  const vezes = Math.floor(descontado / cfg.descontoSemanal);
+  document.getElementById('jdDescontado').textContent = `$${descontado.toLocaleString('en-US')}`;
+  document.getElementById('jdVezes').textContent      = vezes;
+  document.getElementById('jdSaldo').textContent      = `$${saldo.toLocaleString('en-US')}`;
+}
+
+function registrarDescontoJaime() {
+  const cfg = FUNCIONARIOS['Jaime'].divida;
+  const atual = getDescontadoJaime();
+  if (atual >= cfg.total) { showToast('💳 Dívida já quitada!'); return; }
+  const novo = atual + cfg.descontoSemanal;
+  ls('lf_jaime_descontado', String(novo));
+  atualizarCardDivida();
+  showToast(`💳 Desconto de $${cfg.descontoSemanal} registrado!`);
+}
 
 // ─── UTILS ───────────────────────────────────
 function todayISO() {
@@ -747,7 +974,7 @@ function atualizarHeaderData(iso) {
   document.getElementById('headerDate').textContent = `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
 }
 function getMes(iso) { return MESES_PT[parseInt(iso.split('-')[1],10)-1]; }
-function fmt(val) { return '$'+Number(val).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmt(val) { return '$'+Number(val||0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 function fmtData(iso) { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
 function ls(k,v) {
@@ -760,15 +987,14 @@ function nextDayISO(iso) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function salvarLocal() {
-  // Salva só os não salvos (rascunhos locais)
   ls(getKey(document.getElementById('inputData').value), JSON.stringify(limpezas.filter(l=>!l.saved)));
 }
 function carregarLocal(data) {
+  notionHojeItems = []; // limpa antes do fetch
   const r=ls(getKey(data));
-  limpezas = (r?JSON.parse(r):[]).filter(l=>!l.saved); // só rascunhos
-  notionHojeItems = [];
+  limpezas = (r?JSON.parse(r):[]).filter(l=>!l.saved);
   render();
-  fetchHojeDoNotion(data); // busca do Notion em paralelo
+  fetchHojeDoNotion(data);
 }
 
 let toastTimer;
@@ -799,20 +1025,24 @@ async function fetchHojeDoNotion(dateISO) {
     if (!res.ok) return;
     const data = await res.json();
 
-    // Monta lista de itens do Notion para este dia
     const notionIds = new Set(limpezas.filter(l=>l.notionId).map(l=>l.notionId));
     notionHojeItems = data.results
-      .filter(pg => !notionIds.has(pg.id)) // evita duplicar com rascunhos salvos
+      .filter(pg => !notionIds.has(pg.id))
       .map(pg => {
         const p = pg.properties;
+        const funcionaria = p['Funcionária']?.select?.name||'?';
         return {
           id:          pg.id,
           notionId:    pg.id,
-          funcionaria: p['Funcionária']?.select?.name||'?',
-          unidade:     p['Unidade']?.select?.name||'?',
+          funcionaria,
+          unidade:     p['Unidade']?.select?.name||'',
           valor:       p['Valor Unit.']?.number||0,
           extra:       0,
           extraDesc:   '',
+          horas:       0,
+          descricao:   '',
+          unidadesAtendidas: '',
+          tipo:        tipoDoFuncionario(funcionaria),
           data:        dateISO,
           saved:       true,
           fromNotion:  true,
@@ -820,7 +1050,7 @@ async function fetchHojeDoNotion(dateISO) {
         };
       });
     render();
-  } catch(_) { /* silencioso — lista local continua funcionando */ }
+  } catch(_) { /* silencioso */ }
 }
 
 // ─── TOKEN BANNER ────────────────────────────
@@ -867,31 +1097,79 @@ function clearUnit() {
 
 // ─── ADICIONAR ───────────────────────────────
 function adicionarLimpeza() {
-  const funcionaria = document.getElementById('selFuncionaria').value;
-  const unidade     = selectedUnit;
-  const valorRaw    = document.getElementById('inputValor').value;
-  const data        = document.getElementById('inputData').value;
-  const valor       = parseFloat(valorRaw);
-  const extra       = parseFloat(document.getElementById('inputExtra').value)||0;
-  const extraDesc   = document.getElementById('inputExtraDesc').value.trim();
-  const horas       = parseFloat(document.getElementById('inputHoras').value)||0;
+  const nome = document.getElementById('selFuncionaria').value;
+  const data = document.getElementById('inputData').value;
 
-  if (!funcionaria)                              { showToast('⚠️ Selecione a funcionária'); return; }
-  if (!data)                                     { showToast('⚠️ Selecione a data');        return; }
-  if (!unidade && horas==0 && (valor>0||extra==0)) { showToast('⚠️ Selecione a unidade');   return; }
-  if ((!valorRaw||valor<=0) && extra==0&&horas==0) { showToast('⚠️ Digite um valor válido'); return; }
-  if (extra>0&&!extraDesc)                       { showToast('⚠️ Descreva o extra');        return; }
-  const tipo = funcionaria === 'Jaime' ? 'Supervisão' : FIXO_QUINZENAL.has(funcionaria) ? 'Fixo' : 'Limpeza';
-  limpezas.unshift({ id:uid(), funcionaria, unidade, valor:valor||0, extra, extraDesc, horas, tipo, data, saved:false, notionId:null });
+  if (!nome) { showToast('⚠️ Selecione o funcionário'); return; }
+  if (!data) { showToast('⚠️ Selecione a data');        return; }
+
+  const cfg = FUNCIONARIOS[nome];
+  let unidade = '', valor = 0, extra = 0, extraDesc = '', horas = 0;
+  let descricao = '', unidadesAtendidas = '', tipo = 'Limpeza';
+
+  if (!cfg || cfg.tipo === 'limpeza') {
+    unidade   = selectedUnit;
+    valor     = parseFloat(document.getElementById('inputValor').value) || 0;
+    extra     = parseFloat(document.getElementById('inputExtra').value) || 0;
+    extraDesc = document.getElementById('inputExtraDesc').value.trim();
+    tipo      = (cfg?.pagamento === 'fixo_quinzenal') ? 'Fixo' : 'Limpeza';
+
+    if (!unidade)                         { showToast('⚠️ Selecione a unidade');     return; }
+    if (valor <= 0 && extra <= 0)         { showToast('⚠️ Digite um valor válido'); return; }
+    if (extra > 0 && !extraDesc)          { showToast('⚠️ Descreva o extra');        return; }
+
+  } else if (cfg.tipo === 'supervisao') {
+    horas     = parseFloat(document.getElementById('inputHoras').value) || 0;
+    valor     = +(horas * cfg.valorHora).toFixed(2);
+    extra     = parseFloat(document.getElementById('inputExtra').value) || 0;
+    extraDesc = document.getElementById('inputExtraDesc').value.trim();
+    tipo      = 'Supervisão';
+
+    if (horas <= 0 && extra <= 0) { showToast('⚠️ Digite horas ou um extra'); return; }
+    if (extra > 0 && !extraDesc)  { showToast('⚠️ Descreva o extra');         return; }
+
+  } else if (cfg.tipo === 'landscaping' && cfg.pagamento === 'fixo_quinzenal') {
+    // Darwin
+    descricao = document.getElementById('inputDescricao').value.trim();
+    valor     = cfg.valorFixo;
+    tipo      = 'Landscaping';
+    if (!descricao) { showToast('⚠️ Descreva o serviço'); return; }
+
+  } else if (cfg.tipo === 'landscaping' && cfg.pagamento === 'avulso') {
+    // Juan
+    descricao         = document.getElementById('inputDescricao').value.trim();
+    valor             = parseFloat(document.getElementById('inputValor').value) || 0;
+    unidadesAtendidas = document.getElementById('inputUnidadesAtendidas').value.trim();
+    tipo              = 'Landscaping';
+    if (!descricao) { showToast('⚠️ Descreva o serviço'); return; }
+    if (valor <= 0) { showToast('⚠️ Digite o valor');     return; }
+  }
+
+  limpezas.unshift({
+    id: uid(), funcionaria: nome, unidade, valor, extra, extraDesc, horas,
+    descricao, unidadesAtendidas, tipo, data, saved: false, notionId: null
+  });
   salvarLocal(); render();
 
-  clearUnit();
-  document.getElementById('inputValor').value     = '';
-  document.getElementById('inputExtra').value     = '';
-  document.getElementById('inputExtraDesc').value = '';
-  document.getElementById('inputHoras').value     = '';
-  document.getElementById('inputUnidade').focus();
-  showToast('✅ Limpeza adicionada!');
+  // Reset campos (mantém Darwin com valor fixo)
+  document.getElementById('inputHoras').value             = '';
+  document.getElementById('inputExtra').value             = '';
+  document.getElementById('inputExtraDesc').value         = '';
+  document.getElementById('inputDescricao').value         = '';
+  document.getElementById('inputUnidadesAtendidas').value = '';
+  if (cfg?.tipo === 'landscaping' && cfg?.pagamento === 'fixo_quinzenal') {
+    document.getElementById('inputValor').value = cfg.valorFixo;
+  } else {
+    clearUnit();
+    document.getElementById('inputValor').value = '';
+  }
+
+  // Foco no campo apropriado
+  if (cfg?.tipo === 'supervisao')         document.getElementById('inputHoras').focus();
+  else if (cfg?.tipo === 'landscaping')   document.getElementById('inputDescricao').focus();
+  else                                    document.getElementById('inputUnidade').focus();
+
+  showToast('✅ Registro adicionado!');
 }
 
 // ─── REMOVER (com confirmação) ────────────────
@@ -899,27 +1177,60 @@ function removerLimpeza(id) {
   const l = limpezas.find(x=>x.id===id) || notionHojeItems.find(x=>x.id===id);
   if (!l) return;
   pendingRemoveId = id;
+  const detalhe = l.unidade ? ` · Unidade ${l.unidade}` : (l.descricao ? ` · ${l.descricao}` : '');
   document.getElementById('confirmText').textContent =
-    `${l.funcionaria}${l.unidade ? ` · Unidade ${l.unidade}` : ''} · ${fmt((l.valor||0)+(l.extra||0))}`;
+    `${l.funcionaria}${detalhe} · ${fmt((l.valor||0)+(l.extra||0))}`;
   document.getElementById('confirmModal').classList.add('open');
 }
 function closeConfirm() {
   pendingRemoveId = null;
   document.getElementById('confirmModal').classList.remove('open');
 }
-function confirmRemove() {
+async function confirmRemove() {
   if (!pendingRemoveId) return;
-  const inLimpezas = limpezas.some(l=>l.id===pendingRemoveId);
-  if (inLimpezas) {
-    limpezas = limpezas.filter(l=>l.id!==pendingRemoveId);
-    salvarLocal();
-  } else {
-    notionHojeItems = notionHojeItems.filter(i=>i.id!==pendingRemoveId);
-  }
+  const id = pendingRemoveId;
   pendingRemoveId = null;
+
+  const inLimpezas = limpezas.some(l=>l.id===id);
+  if (inLimpezas) {
+    limpezas = limpezas.filter(l=>l.id!==id);
+    salvarLocal();
+    document.getElementById('confirmModal').classList.remove('open');
+    render();
+    showToast('🗑️ Removido');
+    return;
+  }
+
+  // Item do Notion → arquivar via PATCH antes de remover visualmente
+  const item = notionHojeItems.find(i=>i.id===id);
+  if (item?.notionId) {
+    const token    = ls('lf_token')||'';
+    const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+    if (token) {
+      try {
+        const res = await fetch(`${proxyUrl}/v1/pages/${item.notionId}`, {
+          method:'PATCH',
+          headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+          body: JSON.stringify({archived:true})
+        });
+        if (!res.ok) {
+          const e = await res.json().catch(()=>({}));
+          showToast(`❌ Falha ao arquivar: ${e.message||res.status}`);
+          document.getElementById('confirmModal').classList.remove('open');
+          return;
+        }
+      } catch(e) {
+        showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
+        document.getElementById('confirmModal').classList.remove('open');
+        return;
+      }
+    }
+  }
+  notionHojeItems = notionHojeItems.filter(i=>i.id!==id);
   document.getElementById('confirmModal').classList.remove('open');
   render();
-  showToast('🗑️ Limpeza removida da visualização');
+  showToast('🗑️ Removido do Notion');
+  loadHistory();
 }
 
 // ─── RENDER ──────────────────────────────────
@@ -929,18 +1240,24 @@ function renderLista() {
   const el = document.getElementById('listaLimpezas');
   const todos = [...limpezas, ...notionHojeItems];
   if (!todos.length) {
-    el.innerHTML = `<div class="list-empty">Nenhuma limpeza registrada neste dia.</div>`;
+    el.innerHTML = `<div class="list-empty">Nenhum registro neste dia.</div>`;
     return;
   }
   el.innerHTML = todos.map(l => {
     const cor   = EMP_COLORS[l.funcionaria]||'#94a3b8';
     const total = (l.valor||0)+(l.extra||0);
-    const extraHtml  = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
-    const horasHtml  = l.horas>0 ? `<span class="extra-badge" style="background:#dbeafe;color:#1e40af">${l.horas}h × $${JAIME_HOURLY_RATE}</span>` : '';
-    const tipoLabel  = (l.tipo||'Limpeza') === 'Supervisão'
-      ? `<span class="extra-badge" style="background:#ede9fe;color:#6d28d9">Supervisão</span>`
-      : FIXO_QUINZENAL.has(l.funcionaria)
-        ? `<span class="extra-badge" style="background:#fff7ed;color:#c2410c">Fixo Quinzenal</span>` : '';
+    const cfg   = FUNCIONARIOS[l.funcionaria];
+    const taxa  = cfg?.valorHora;
+    const extraHtml = l.extra>0 ? `<span class="extra-badge">+${fmt(l.extra)} ${l.extraDesc}</span>` : '';
+    const horasHtml = (l.horas>0 && taxa) ? `<span class="extra-badge" style="background:#dbeafe;color:#1e40af">${l.horas}h × $${taxa}</span>` : '';
+    const descHtml  = l.descricao ? `<span class="extra-badge" style="background:#f1f5f9;color:#475569">${l.descricao}</span>` : '';
+    const unidsHtml = l.unidadesAtendidas ? `<span class="extra-badge" style="background:#e0f2fe;color:#0369a1">Unids: ${l.unidadesAtendidas}</span>` : '';
+
+    let tipoLabel = '';
+    if (l.tipo === 'Supervisão')        tipoLabel = `<span class="extra-badge" style="background:#ede9fe;color:#6d28d9">Supervisão</span>`;
+    else if (l.tipo === 'Fixo')         tipoLabel = `<span class="extra-badge" style="background:#fff7ed;color:#c2410c">Fixo Quinzenal</span>`;
+    else if (l.tipo === 'Landscaping')  tipoLabel = `<span class="extra-badge" style="background:#dcfce7;color:#15803d">Landscaping</span>`;
+
     const statusBadge = l.saved
       ? `<span class="saved-badge">✓ Salvo no Notion</span>`
       : `<span class="unsaved-badge">⏳ Não salvo</span>`;
@@ -954,12 +1271,19 @@ function renderLista() {
           <div class="item-main">${l.funcionaria}${l.unidade ? ` — Unidade ${l.unidade}` : ''}</div>
           <div class="item-sub">${fmtData(l.data)}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${statusBadge}${pagoBtn}</div>
-          ${tipoLabel}${horasHtml}${extraHtml}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${tipoLabel}${horasHtml}${extraHtml}${descHtml}${unidsHtml}</div>
         </div>
         <div class="item-value">${fmt(total)}</div>
         <button class="btn-remove" onclick="removerLimpeza('${l.id}')" aria-label="Remover">×</button>
       </div>`;
   }).join('');
+}
+
+function labelContagem(tipo, count) {
+  if (tipo === 'Supervisão') return 'supervisão';
+  if (tipo === 'Landscaping') return `serviço${count!==1?'s':''}`;
+  if (tipo === 'Fixo')        return `registro${count!==1?'s':''}`;
+  return `limpeza${count!==1?'s':''}`;
 }
 
 function renderSummary() {
@@ -970,13 +1294,13 @@ function renderSummary() {
   const stats={};let totalGeral=0,countGeral=0;
   todos.forEach(l=>{
     const t=(l.valor||0)+(l.extra||0);
-    if(!stats[l.funcionaria]) stats[l.funcionaria]={total:0,count:0};
+    if(!stats[l.funcionaria]) stats[l.funcionaria]={total:0,count:0,tipo:l.tipo||'Limpeza'};
     stats[l.funcionaria].total+=t; stats[l.funcionaria].count++;
     totalGeral+=t; countGeral++;
   });
   const empCards = Object.entries(stats).map(([nome,s])=>{
     const cor=EMP_COLORS[nome]||'#94a3b8';
-    const label = nome==='Jaime' ? `supervisão${s.count!==1?'':''}` : `limpeza${s.count!==1?'s':''}`;
+    const label = labelContagem(s.tipo, s.count);
     return `<div class="summary-card" style="border-left-color:${cor}">
       <div class="sc-name">${nome}</div>
       <div class="sc-total">${fmt(s.total)}</div>
@@ -987,7 +1311,7 @@ function renderSummary() {
     `<div class="summary-card total-card">
       <div class="sc-name">Total do Dia</div>
       <div class="sc-total">${fmt(totalGeral)}</div>
-      <div class="sc-count">${countGeral} limpeza${countGeral!==1?'s':''} · ${nF} funcionária${nF!==1?'s':''}</div></div>`;
+      <div class="sc-count">${countGeral} registro${countGeral!==1?'s':''} · ${nF} funcionário${nF!==1?'s':''}</div></div>`;
 }
 
 function renderSaveBar() {
@@ -1007,6 +1331,28 @@ function saveSettings() {
 }
 
 // ─── SALVAR NO NOTION ────────────────────────
+function buildObsText(l) {
+  const cfg = FUNCIONARIOS[l.funcionaria];
+  if (cfg?.tipo === 'supervisao') {
+    const horasPart = l.horas>0 ? ` | ${l.horas}h` : '';
+    return l.extra>0
+      ? `[Supervisão] ${l.funcionaria}${horasPart} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
+      : `[Supervisão] ${l.funcionaria}${horasPart}`;
+  }
+  if (cfg?.tipo === 'landscaping') {
+    const tag = cfg.pagamento === 'fixo_quinzenal' ? '[Landscaping Fixo] ' : '[Landscaping] ';
+    const desc = l.descricao ? ` | ${l.descricao}` : '';
+    const unids = l.unidadesAtendidas ? ` | Unids: ${l.unidadesAtendidas}` : '';
+    return `${tag}${l.funcionaria}${desc}${unids}`;
+  }
+  // Limpeza ou Fixo (Rosita)
+  const unidPart = l.unidade ? `${l.unidade} · ` : '';
+  const tipoPart = l.tipo === 'Fixo' ? '[Fixo Quinzenal] ' : '';
+  return l.extra>0
+    ? `${tipoPart}${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
+    : `${tipoPart}${unidPart}${l.funcionaria}`;
+}
+
 async function salvarNotion() {
   const token    = ls('lf_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
@@ -1027,7 +1373,7 @@ async function salvarNotion() {
   rList.innerHTML = unsaved.map(l=>`
     <div class="result-item" id="ri_${l.id}">
       <span class="ri-status">⏳</span>
-      <span class="ri-text">${l.funcionaria}${l.unidade ? ` · Unidade ${l.unidade}` : ''} · ${fmt((l.valor||0)+(l.extra||0))}</span>
+      <span class="ri-text">${l.funcionaria}${l.unidade ? ` · Unidade ${l.unidade}` : (l.descricao?` · ${l.descricao}`:'')} · ${fmt((l.valor||0)+(l.extra||0))}</span>
     </div>`).join('');
 
   document.getElementById('resultModal').classList.add('open');
@@ -1036,11 +1382,7 @@ async function salvarNotion() {
   const resultados = [];
   for (const l of unsaved) {
     const riEl = document.getElementById(`ri_${l.id}`);
-    const unidPart = l.unidade ? `${l.unidade} · ` : '';
-    const tipoPart = (l.tipo||'Limpeza') === 'Supervisão' ? '[Supervisão] ' : l.tipo==='Fixo' ? '[Fixo Quinzenal] ' : '';
-    const obsText = l.extra>0
-      ? `${tipoPart}${unidPart}${l.funcionaria} | Extra: ${fmt(l.extra)} – ${l.extraDesc}`
-      : `${tipoPart}${unidPart}${l.funcionaria}`;
+    const obsText = buildObsText(l);
     const props = {
       'Obs':         { title:[{text:{content:obsText}}] },
       'Funcionária': { select:{name:l.funcionaria} },
@@ -1050,10 +1392,7 @@ async function salvarNotion() {
       'Pago?':       { checkbox:false }
     };
     if (l.unidade) props['Unidade'] = { select:{name:l.unidade} };
-    const body = {
-      parent: { database_id: DB_ID },
-      properties: props
-    };
+    const body = { parent:{ database_id:DB_ID }, properties:props };
     try {
       const res = await fetch(`${proxyUrl}/v1/pages`, {
         method:'POST',
@@ -1077,7 +1416,6 @@ async function salvarNotion() {
     }
   }
 
-  // Mover os salvos para notionHojeItems e remover de limpezas
   const savedIds = new Set(resultados.filter(r=>r.ok).map(r=>r.id));
   const novosSalvos = limpezas
     .filter(l=>savedIds.has(l.id))
@@ -1094,6 +1432,9 @@ async function salvarNotion() {
   btnClose.style.display='block';
   document.getElementById('btnSalvar').disabled=false;
   render();
+
+  // Recarrega histórico após salvar
+  if (nOk > 0) loadHistory();
 }
 function closeResult() { document.getElementById('resultModal').classList.remove('open'); }
 
@@ -1111,7 +1452,7 @@ function getDateRange(filter) {
   const today = todayISO();
   const dObj  = new Date(today+'T00:00:00');
   if (filter==='hoje') {
-    return { start: today, end: null }; // só hoje
+    return { start: today, end: null };
   } else if (filter==='mes') {
     const start = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-01`;
     return { start, end: null };
@@ -1144,35 +1485,47 @@ async function loadHistory() {
   })();
 
   try {
-    const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
-      method:'POST',
-      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
-      body: JSON.stringify({
+    // Paginação: busca todas as páginas até has_more=false
+    let cursor = undefined;
+    const allResults = [];
+    do {
+      const body = {
         filter:{ and:[
           {property:'Data',date:{on_or_after:start}},
           {property:'Data',date:{before:tomorrow}}
         ]},
         sorts:[{property:'Data',direction:'descending'}],
         page_size:100
-      })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+      };
+      if (cursor) body.start_cursor = cursor;
 
-    // Parse e agrupa por data
+      const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allResults.push(...data.results);
+      cursor = data.has_more ? data.next_cursor : undefined;
+    } while (cursor);
+
     const byDate = {};
     allHistoryItems = [];
-    for (const pg of data.results) {
+    for (const pg of allResults) {
       const p  = pg.properties;
       const ds = (p['Data']?.date?.start||'').slice(0,10);
       if (!ds) continue;
+      const funcionaria = p['Funcionária']?.select?.name||'?';
       const item = {
         id:          pg.id,
-        funcionaria: p['Funcionária']?.select?.name||'?',
-        unidade:     p['Unidade']?.select?.name||'?',
+        funcionaria,
+        unidade:     p['Unidade']?.select?.name||'',
         valor:       p['Valor Unit.']?.number||0,
+        extra:       0,
         pago:        p['Pago?']?.checkbox||false,
-        data:        ds
+        data:        ds,
+        tipo:        tipoDoFuncionario(funcionaria)
       };
       if (!byDate[ds]) byDate[ds]=[];
       byDate[ds].push(item);
@@ -1182,22 +1535,24 @@ async function loadHistory() {
     const dates = Object.keys(byDate).sort().reverse();
     document.getElementById('btnCopiar').style.display = allHistoryItems.length ? 'flex' : 'none';
 
-    // ── Resumo de pagamentos por funcionária ──
+    // ── Pagamentos por funcionário ──
     const payByEmp={};let payTotal=0,payPend=0;
     for (const i of allHistoryItems) {
-      if (!payByEmp[i.funcionaria]) payByEmp[i.funcionaria]={items:[],total:0,pendente:0};
+      const v = (i.valor||0)+(i.extra||0);
+      if (!payByEmp[i.funcionaria]) payByEmp[i.funcionaria]={items:[],total:0,pendente:0,tipo:i.tipo};
       payByEmp[i.funcionaria].items.push(i);
-      payByEmp[i.funcionaria].total+=i.valor;
-      if (!i.pago) payByEmp[i.funcionaria].pendente+=i.valor;
-      payTotal+=i.valor; if (!i.pago) payPend+=i.valor;
+      payByEmp[i.funcionaria].total+=v;
+      if (!i.pago) payByEmp[i.funcionaria].pendente+=v;
+      payTotal+=v; if (!i.pago) payPend+=v;
     }
     const empPayCards = Object.entries(payByEmp)
       .sort((a,b)=>b[1].pendente-a[1].pendente)
       .map(([nome,s])=>{
         const cor=EMP_COLORS[nome]||'#94a3b8';
         const nNao=s.items.filter(i=>!i.pago).length;
+        const lbl = labelContagem(s.tipo, s.items.length);
         const pendH = s.pendente>0
-          ? `<div class="pagamento-pendente">💰 ${fmt(s.pendente)} pendente · ${nNao} limpeza${nNao!==1?'s':''}</div>`
+          ? `<div class="pagamento-pendente">💰 ${fmt(s.pendente)} pendente · ${nNao} ${labelContagem(s.tipo,nNao)}</div>`
           : `<div class="pagamento-ok">✅ Tudo pago</div>`;
         const btnP = s.pendente>0
           ? `<button class="btn-pagar-tudo" onclick="marcarTudoPago('${nome}',this)">Marcar pagas</button>`
@@ -1205,7 +1560,7 @@ async function loadHistory() {
         return `<div class="pagamento-card" style="border-left-color:${cor}">
           <div class="pagamento-info">
             <div class="pagamento-nome">${nome}</div>
-            <div class="pagamento-detalhe">${s.items.length} limpeza${s.items.length!==1?'s':''}</div>
+            <div class="pagamento-detalhe">${s.items.length} ${lbl}</div>
             ${pendH}</div>
           <div class="pagamento-right"><div class="pagamento-valor">${fmt(s.total)}</div>${btnP}</div>
         </div>`;
@@ -1214,19 +1569,20 @@ async function loadHistory() {
       <div class="section-label" style="margin-bottom:8px">Pagamentos</div>
       <div class="pagamento-total-card">
         <div><div class="ptc-label">Total do período</div><div class="ptc-value">${fmt(payTotal)}</div>
-        <div class="ptc-sub">${allHistoryItems.length} limpeza${allHistoryItems.length!==1?'s':''}</div></div>
+        <div class="ptc-sub">${allHistoryItems.length} registro${allHistoryItems.length!==1?'s':''}</div></div>
         ${payPend>0
           ? `<div style="text-align:right"><div class="ptc-label">A pagar</div><div class="ptc-value" style="color:#fca5a5">${fmt(payPend)}</div></div>`
           : `<div style="color:#86efac;font-size:14px;font-weight:700">✅ Tudo pago</div>`}
       </div>
       ${empPayCards}`;
 
-    // Stats por funcionária
+    // ── Stats por funcionário ──
     const wStats={}; let wTotal=0,wCount=0;
     for (const i of allHistoryItems) {
-      if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0};
-      wStats[i.funcionaria].total+=i.valor; wStats[i.funcionaria].count++;
-      wTotal+=i.valor; wCount++;
+      const v=(i.valor||0)+(i.extra||0);
+      if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0,tipo:i.tipo};
+      wStats[i.funcionaria].total+=v; wStats[i.funcionaria].count++;
+      wTotal+=v; wCount++;
     }
     let weekHtml='';
     if (wCount>0) {
@@ -1234,18 +1590,17 @@ async function loadHistory() {
         .sort((a,b)=>b[1].total-a[1].total)
         .map(([nome,s])=>{
           const cor=EMP_COLORS[nome]||'#94a3b8';
-          const wLabel = nome==='Jaime' ? 'supervisão' : `limpeza${s.count!==1?'s':''}`;
           return `<div class="week-stat-card" style="border-left-color:${cor}">
             <div class="wsc-name">${nome}</div><div class="wsc-total">${fmt(s.total)}</div>
-            <div class="wsc-count">${s.count} ${wLabel}</div></div>`;
+            <div class="wsc-count">${s.count} ${labelContagem(s.tipo,s.count)}</div></div>`;
         }).join('');
       const nF=Object.keys(wStats).length;
       weekHtml = `
-        <div class="section-label" style="margin-bottom:8px;margin-top:14px">Por funcionária</div>
+        <div class="section-label" style="margin-bottom:8px;margin-top:14px">Por funcionário</div>
         <div class="week-stats-grid">${empCards}
           <div class="week-stat-card total-week">
             <div class="wsc-name">Total do período</div><div class="wsc-total">${fmt(wTotal)}</div>
-            <div class="wsc-count">${wCount} limpeza${wCount!==1?'s':''} · ${nF} funcionária${nF!==1?'s':''}</div>
+            <div class="wsc-count">${wCount} registro${wCount!==1?'s':''} · ${nF} funcionário${nF!==1?'s':''}</div>
           </div></div>`;
     }
 
@@ -1256,7 +1611,7 @@ async function loadHistory() {
 
     const daysHtml = dates.map(ds=>{
       const items = byDate[ds];
-      const total = items.reduce((s,i)=>s+i.valor,0);
+      const total = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
       const [y,m,d] = ds.split('-').map(Number);
       const dt   = new Date(y,m-1,d);
       const label = `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
@@ -1265,15 +1620,16 @@ async function loadHistory() {
 
       const rowsHtml = items.map(i=>{
         const cor=EMP_COLORS[i.funcionaria]||'#94a3b8';
+        const sub = i.unidade ? `Unidade ${i.unidade}` : (i.tipo || 'Limpeza');
         return `
           <div class="history-row">
             <div class="history-row-dot" style="background:${cor}"></div>
             <div class="history-row-info">
               <div class="history-row-name">${i.funcionaria}</div>
-              <div class="history-row-unit">Unidade ${i.unidade}</div>
+              <div class="history-row-unit">${sub}</div>
             </div>
             <div class="history-row-right">
-              <span class="history-row-val">${fmt(i.valor)}</span>
+              <span class="history-row-val">${fmt((i.valor||0)+(i.extra||0))}</span>
               <button class="pago-btn ${i.pago?'pago':'nao-pago'}" onclick="togglePago('${i.id}',${i.pago},this)">
                 ${i.pago?'✓ Pago':'✗ Não pago'}
               </button>
@@ -1285,7 +1641,7 @@ async function loadHistory() {
         <div class="history-day" id="hday_${ds}">
           <div class="history-day-header" onclick="toggleHistoryDay('${ds}')">
             <div class="history-day-date">${label}</div>
-            <div class="history-day-meta">${items.length} limpeza${items.length!==1?'s':''}${pendHtml}</div>
+            <div class="history-day-meta">${items.length} registro${items.length!==1?'s':''}${pendHtml}</div>
             <div class="history-day-total">${fmt(total)}</div>
             <div class="history-day-chevron">▾</div>
           </div>
@@ -1308,7 +1664,7 @@ async function loadHistory() {
   }
 }
 
-// Pago/não pago nos itens do dia atual
+// Pago/não pago no dia atual
 async function togglePagoHoje(notionId, currentPago, btn) {
   const token    = ls('lf_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
@@ -1322,7 +1678,6 @@ async function togglePagoHoje(notionId, currentPago, btn) {
       body: JSON.stringify({properties:{'Pago?':{checkbox:newPago}}})
     });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.message||`HTTP ${res.status}`); }
-    // Atualiza estado local
     const item = notionHojeItems.find(i=>i.notionId===notionId);
     if (item) item.pago = newPago;
     btn.className   = `pago-btn ${newPago?'pago':'nao-pago'}`;
@@ -1341,34 +1696,90 @@ function copiarResumo() {
   const labels = {'hoje':'Hoje','7':'7 dias','15':'15 dias','30':'30 dias','mes':'Este mês'};
   const periodo = labels[currentFilter]||'Período';
 
+  // Agrupa por funcionário
   const byEmp = {};
   for (const i of allHistoryItems) {
     if (!byEmp[i.funcionaria]) byEmp[i.funcionaria]=[];
     byEmp[i.funcionaria].push(i);
   }
 
+  const isLimpezaVar = n => { const c=FUNCIONARIOS[n]; return (!c) || (c.tipo==='limpeza' && c.pagamento!=='fixo_quinzenal'); };
+  const isFixo       = n => FUNCIONARIOS[n]?.pagamento === 'fixo_quinzenal';
+  const isSupervisao = n => FUNCIONARIOS[n]?.tipo === 'supervisao';
+  const isLandsAvulso= n => { const c=FUNCIONARIOS[n]; return c?.tipo==='landscaping' && c?.pagamento==='avulso'; };
+
+  const limpezaNomes  = Object.keys(byEmp).filter(isLimpezaVar).sort();
+  const fixoNomes     = Object.keys(byEmp).filter(isFixo).sort();
+  const supervNomes   = Object.keys(byEmp).filter(isSupervisao).sort();
+  const landsNomes    = Object.keys(byEmp).filter(isLandsAvulso).sort();
+
   let txt = `🧹 *LF Services — ${periodo}*\n\n`;
-  for (const [nome, items] of Object.entries(byEmp).sort()) {
-    const total   = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
-    const pendente= items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
-    const isJaime = nome === 'Jaime';
-    const isFixo  = FIXO_QUINZENAL.has(nome);
-    const icone   = isJaime ? '👷' : isFixo ? '📋' : '🧹';
-    txt += `${icone} *${nome}*${isFixo ? ' _(Fixo Quinzenal)_' : ''}\n`;
-    [...items].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{
-      const detalhe = isJaime
-        ? `${i.horas||0}h trabalhadas`
-        : i.unidade ? `Unid.${i.unidade}` : 'Extra';
-      const valorTotal = (i.valor||0)+(i.extra||0);
-      txt += `  ${fmtData(i.data)} · ${detalhe} · $${valorTotal} · ${i.pago?'✓':'✗'}\n`;
-    });
-    txt += `  *Total: $${total}*`;
-    txt += pendente>0 ? ` · 💰 $${pendente} pendente\n\n` : ` · ✅ Tudo pago\n\n`;
+
+  // ── 🧹 LIMPEZAS ──
+  if (limpezaNomes.length) {
+    txt += `🧹 *LIMPEZAS*\n`;
+    for (const nome of limpezaNomes) {
+      const items = byEmp[nome];
+      const total = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+      const pend  = items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+      txt += `\n*${nome}*\n`;
+      [...items].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{
+        const det = i.unidade ? `Unid.${i.unidade}` : 'Extra';
+        txt += `  ${fmtData(i.data)} · ${det} · ${fmt((i.valor||0)+(i.extra||0))} · ${i.pago?'✓':'✗'}\n`;
+      });
+      txt += `  *Total: ${fmt(total)}*${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`;
+    }
+    txt += '\n';
   }
-  const gt=allHistoryItems.reduce((s,i)=>s+i.valor,0);
-  const gp=allHistoryItems.filter(i=>!i.pago).reduce((s,i)=>s+i.valor,0);
-  txt += `💰 *TOTAL: $${gt}*`;
-  if (gp>0) txt += `\n*A pagar: $${gp}*`;
+
+  // ── 📋 FIXOS QUINZENAIS ──
+  if (fixoNomes.length) {
+    txt += `📋 *FIXOS QUINZENAIS* _(separados do variável)_\n`;
+    for (const nome of fixoNomes) {
+      const cfg = FUNCIONARIOS[nome];
+      const items = byEmp[nome];
+      txt += `  ${nome}: ${fmt(cfg?.valorFixo||0)} (${items.length} registro${items.length!==1?'s':''})\n`;
+    }
+    txt += '\n';
+  }
+
+  // ── 👷 SUPERVISÃO ──
+  if (supervNomes.length) {
+    txt += `👷 *SUPERVISÃO*\n`;
+    const descontado = getDescontadoJaime();
+    for (const nome of supervNomes) {
+      const items = byEmp[nome];
+      const bruto = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+      const desc  = (nome==='Jaime') ? descontado : 0;
+      const liq   = Math.max(0, bruto - desc);
+      txt += `\n*${nome}*\n`;
+      [...items].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{
+        txt += `  ${fmtData(i.data)} · ${fmt((i.valor||0)+(i.extra||0))} · ${i.pago?'✓':'✗'}\n`;
+      });
+      txt += `  Bruto: ${fmt(bruto)}`;
+      if (desc>0) txt += ` · Desc. dívida: ${fmt(desc)}`;
+      txt += ` · *Líquido: ${fmt(liq)}*\n`;
+    }
+    txt += '\n';
+  }
+
+  // ── 🌿 LANDSCAPING (avulso) ──
+  if (landsNomes.length) {
+    txt += `🌿 *LANDSCAPING*\n`;
+    for (const nome of landsNomes) {
+      const items = byEmp[nome];
+      const total = items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+      const pend  = items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+      txt += `  *${nome}*: ${fmt(total)}${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`;
+    }
+    txt += '\n';
+  }
+
+  // ── TOTAL ──
+  const gt = allHistoryItems.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+  const gp = allHistoryItems.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
+  txt += `💰 *TOTAL: ${fmt(gt)}*`;
+  if (gp>0) txt += `\n*A pagar: ${fmt(gp)}*`;
 
   const fallback = el => {
     document.body.appendChild(el); el.select();
@@ -1385,7 +1796,7 @@ function copiarResumo() {
   }
 }
 
-// ─── MARCAR TUDO PAGO POR FUNCIONÁRIA ────────
+// ─── MARCAR TUDO PAGO POR FUNCIONÁRIO ────────
 async function marcarTudoPago(funcionaria, btn) {
   const token    = ls('lf_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
@@ -1403,7 +1814,7 @@ async function marcarTudoPago(funcionaria, btn) {
     }).then(res => { if (res.ok) item.pago=true; else throw new Error(`HTTP ${res.status}`); })
   ));
   const ok = results.filter(r=>r.status==='fulfilled').length;
-  showToast(`✅ ${ok} limpeza${ok!==1?'s':''} de ${funcionaria} marcada${ok!==1?'s':''} como paga`);
+  showToast(`✅ ${ok} registro${ok!==1?'s':''} de ${funcionaria} marcado${ok!==1?'s':''} como pago`);
   loadHistory();
 }
 
@@ -1431,14 +1842,13 @@ async function togglePago(notionId, currentPago, btn) {
     btn.onclick     = () => togglePago(notionId, newPago, btn);
     showToast(newPago ? '✅ Marcado como pago!' : '↩️ Marcado como não pago');
 
-    // Atualiza contador de pendentes no cabeçalho do dia
     const dayEl = btn.closest('.history-day');
     if (dayEl) {
       const nPend = dayEl.querySelectorAll('.pago-btn.nao-pago').length;
       const metaEl = dayEl.querySelector('.history-day-meta');
       const count  = dayEl.querySelectorAll('.history-row').length;
       const pendHtml = nPend>0 ? ` · <span class="pending-badge">${nPend} pendente${nPend>1?'s':''}</span>` : '';
-      metaEl.innerHTML = `${count} limpeza${count!==1?'s':''}${pendHtml}`;
+      metaEl.innerHTML = `${count} registro${count!==1?'s':''}${pendHtml}`;
     }
   } catch(e) {
     showToast(e instanceof TypeError ? '❌ Sem conexão com o Worker' : `❌ Erro: ${e.message}`);
