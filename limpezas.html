@@ -26,7 +26,7 @@
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg); color: var(--text); font-size: 16px;
-      min-height: 100vh; padding-bottom: 110px;
+      min-height: 100vh; padding-bottom: 160px;
     }
 
     /* ── HEADER ── */
@@ -213,8 +213,8 @@
 
     /* ── SAVE BAR ── */
     .save-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      padding: 12px 16px env(safe-area-inset-bottom, 0px);
+      position: fixed; bottom: 66px; left: 0; right: 0;
+      padding: 12px 16px 10px;
       background: rgba(238,242,247,0.96); backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255,255,255,0.6); display: none;
     }
@@ -496,6 +496,84 @@
     .dyn-badge.darwin{ background: #dcfce7; color: #15803d; }
     .dyn-badge.juan  { background: #e0f2fe; color: #0369a1; }
 
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+      background: var(--card); border-top: 1px solid var(--border);
+      display: flex; height: 66px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      box-shadow: 0 -4px 16px rgba(15,39,68,0.08);
+    }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; border: none; background: none;
+      font-family: inherit; -webkit-tap-highlight-color: transparent;
+      color: var(--text-muted); transition: color 0.18s; padding-top: 4px;
+    }
+    .nav-tab.active { color: var(--blue-dark); }
+    .nav-tab-icon { font-size: 20px; line-height: 1; }
+    .nav-tab-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── MONTH DASHBOARD ── */
+    .mes-section { margin: 0 16px 12px; }
+    .mes-nav {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .mes-nav-title { font-size: 16px; font-weight: 800; }
+    .mes-nav-btn {
+      width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--card); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; font-family: inherit;
+    }
+    .mes-nav-btn:active { background: var(--bg); }
+    .mes-resumo-card {
+      background: linear-gradient(135deg, #0f2744, #1e3a5f);
+      border-radius: 18px; padding: 18px 20px; margin-bottom: 14px;
+      box-shadow: 0 6px 20px rgba(15,39,68,0.25);
+    }
+    .mrc-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+    .mrc-value { font-size: 28px; font-weight: 900; color: white; margin: 4px 0 2px; line-height: 1; }
+    .mrc-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+    .mrc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .mrc-mini { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; }
+    .mrc-mini-label { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .mrc-mini-val { font-size: 16px; font-weight: 800; color: white; margin-top: 2px; }
+    .mes-emp-card {
+      background: var(--card); border-radius: 16px; padding: 14px 16px;
+      box-shadow: var(--shadow); margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.7); border-left: 4px solid #ccc;
+      display: flex; align-items: center; gap: 14px; transition: box-shadow 0.2s;
+    }
+    .mes-emp-card:hover { box-shadow: var(--shadow-md); }
+    .mes-emp-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: white;
+    }
+    .mes-emp-info { flex: 1; min-width: 0; }
+    .mes-emp-nome { font-size: 14px; font-weight: 800; }
+    .mes-emp-detalhe { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .mes-emp-valor { font-size: 18px; font-weight: 800; color: var(--green-dark); flex-shrink: 0; }
+    .mes-loading { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.8; }
+    .mes-no-token {
+      text-align: center; padding: 28px 20px; font-size: 14px;
+      color: var(--text-muted); background: var(--card); border-radius: 14px;
+      box-shadow: var(--shadow); line-height: 1.7;
+    }
+
+    /* ── SUMMARY EMP ROWS ── */
+    .summary-emp-rows { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
+    .summary-emp-row {
+      display: flex; align-items: center; gap: 8px; padding: 5px 0;
+      font-size: 13px; color: rgba(255,255,255,0.9);
+    }
+    .summary-emp-row:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .summary-emp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .summary-emp-name { flex: 1; font-weight: 600; }
+    .summary-emp-count { font-size: 11px; color: rgba(255,255,255,0.5); margin-right: 4px; }
+    .summary-emp-val { font-weight: 800; color: #86efac; }
+
     /* ── SECTION DIVIDER WITH LINE ── */
     .section-label-line {
       display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
@@ -528,6 +606,9 @@
   <span class="token-banner-text">Token do Notion não configurado. Configure antes de salvar.</span>
   <button class="token-banner-btn" onclick="openSettings()">Configurar ›</button>
 </div>
+
+<!-- ══ HOJE SECTION ══ -->
+<div id="hojeSection">
 
 <!-- ══ FORM ══ -->
 <div class="form-card">
@@ -654,6 +735,8 @@
   </div>
 </div>
 
+</div><!-- /hojeSection -->
+
 <!-- ══ OFFLINE BANNER ══ -->
 <div class="offline-banner" id="offlineBanner">
   <div class="offline-title">📡 Sem conexão com o Worker</div>
@@ -686,6 +769,36 @@
     <span class="badge" id="badgeCount">0</span>
   </button>
 </div>
+
+<!-- ══ MONTH DASHBOARD ══ -->
+<div id="mesSection" style="display:none">
+  <div class="mes-section">
+    <div class="mes-nav">
+      <button class="mes-nav-btn" onclick="navMes(-1)">‹</button>
+      <div class="mes-nav-title" id="mesTitulo">Carregando...</div>
+      <button class="mes-nav-btn" onclick="navMes(1)">›</button>
+    </div>
+    <div id="mesContent">
+      <div class="mes-loading">⏳ Carregando dados do mês...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="navTab_hoje" onclick="switchTab('hoje')">
+    <span class="nav-tab-icon">🏠</span>
+    <span class="nav-tab-label">Hoje</span>
+  </button>
+  <button class="nav-tab" id="navTab_historico" onclick="switchTab('historico')">
+    <span class="nav-tab-icon">📋</span>
+    <span class="nav-tab-label">Histórico</span>
+  </button>
+  <button class="nav-tab" id="navTab_mes" onclick="switchTab('mes')">
+    <span class="nav-tab-icon">📊</span>
+    <span class="nav-tab-label">Mês</span>
+  </button>
+</nav>
 
 <!-- ══ SETTINGS MODAL ══ -->
 <div class="modal-overlay" id="settingsModal">
@@ -859,7 +972,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resultModal').addEventListener('click',   function(e){ if(e.target===this) closeResult();   });
   document.getElementById('confirmModal').addEventListener('click',  function(e){ if(e.target===this) closeConfirm();  });
 
-  loadHistory();
+  // History loads on demand when user switches to historico tab
+  document.getElementById('historySection').style.display = 'none';
 });
 
 // Aviso de saída com rascunhos pendentes
@@ -1354,8 +1468,12 @@ function labelContagem(tipo, count) {
 function renderSummary() {
   const section = document.getElementById('summarySection');
   const todos = [...limpezas, ...notionHojeItems];
-  if (!todos.length) { section.style.display='none'; return; }
   section.style.display = 'block';
+  if (!todos.length) {
+    document.getElementById('summaryGrid').innerHTML =
+      `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px;font-size:14px">Nenhum registro hoje</div>`;
+    return;
+  }
   const stats={};let totalGeral=0,countGeral=0;
   todos.forEach(l=>{
     const t=(l.valor||0)+(l.extra||0);
@@ -1372,11 +1490,25 @@ function renderSummary() {
       <div class="sc-count">${s.count} ${label}</div></div>`;
   }).join('');
   const nF=Object.keys(stats).length;
+  const empRowsSorted = Object.entries(stats).sort((a,b)=>b[1].total-a[1].total);
+  const empRowsHtml = empRowsSorted.length > 1
+    ? `<div class="summary-emp-rows">${empRowsSorted.map(([nome,s])=>{
+        const cor=EMP_COLORS[nome]||'#94a3b8';
+        const lbl=labelContagem(s.tipo,s.count);
+        return `<div class="summary-emp-row">
+          <div class="summary-emp-dot" style="background:${cor}"></div>
+          <div class="summary-emp-name">${nome}</div>
+          <div class="summary-emp-count">${s.count} ${lbl}</div>
+          <div class="summary-emp-val">${fmt(s.total)}</div>
+        </div>`;
+      }).join('')}</div>` : '';
   document.getElementById('summaryGrid').innerHTML = empCards +
     `<div class="summary-card total-card">
       <div class="sc-name">Total do Dia</div>
       <div class="sc-total">${fmt(totalGeral)}</div>
-      <div class="sc-count">${countGeral} registro${countGeral!==1?'s':''} · ${nF} funcionário${nF!==1?'s':''}</div></div>`;
+      <div class="sc-count">${countGeral} registro${countGeral!==1?'s':''} · ${nF} funcionário${nF!==1?'s':''}</div>
+      ${empRowsHtml}
+    </div>`;
 }
 
 function renderSaveBar() {
@@ -1882,6 +2014,143 @@ async function marcarTudoPago(funcionaria, btn) {
   const ok = results.filter(r=>r.status==='fulfilled').length;
   showToast(`✅ ${ok} registro${ok!==1?'s':''} de ${funcionaria} marcado${ok!==1?'s':''} como pago`);
   loadHistory();
+}
+
+// ─── TABS ─────────────────────────────────────
+let currentTab = 'hoje';
+function switchTab(tab) {
+  currentTab = tab;
+  const hojeEl   = document.getElementById('hojeSection');
+  const histEl   = document.getElementById('historySection');
+  const mesEl    = document.getElementById('mesSection');
+  if (hojeEl) hojeEl.style.display   = tab==='hoje'      ? 'block' : 'none';
+  if (histEl) histEl.style.display   = tab==='historico' ? 'block' : 'none';
+  if (mesEl)  mesEl.style.display    = tab==='mes'       ? 'block' : 'none';
+  ['hoje','historico','mes'].forEach(t => {
+    const el = document.getElementById(`navTab_${t}`);
+    if (el) el.classList.toggle('active', t===tab);
+  });
+  if (tab==='historico') {
+    if (!ls('lf_token')) {
+      const c = document.getElementById('historyContent');
+      if (c) c.innerHTML = '<div class="mes-no-token">Configure o token do Notion nas configurações para ver o histórico.</div>';
+      if (histEl) histEl.style.display = 'block';
+    } else {
+      loadHistory();
+    }
+  }
+  if (tab==='mes') {
+    if (!ls('lf_token')) {
+      document.getElementById('mesContent').innerHTML =
+        '<div class="mes-no-token">Configure o token do Notion nas configurações para ver o dashboard mensal.</div>';
+    } else {
+      loadDashboardMes();
+    }
+  }
+}
+
+// ─── MONTH DASHBOARD ──────────────────────────
+let mesViewYear  = new Date().getFullYear();
+let mesViewMonth = new Date().getMonth() + 1;
+
+function navMes(dir) {
+  mesViewMonth += dir;
+  if (mesViewMonth > 12) { mesViewMonth = 1; mesViewYear++; }
+  if (mesViewMonth < 1)  { mesViewMonth = 12; mesViewYear--; }
+  loadDashboardMes();
+}
+
+async function loadDashboardMes() {
+  const token    = ls('lf_token')||'';
+  const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
+  const content  = document.getElementById('mesContent');
+  const titulo   = document.getElementById('mesTitulo');
+  if (titulo) titulo.textContent = `${MESES_PT[mesViewMonth-1]} ${mesViewYear}`;
+  if (!token) {
+    content.innerHTML = '<div class="mes-no-token">Configure o token do Notion nas configurações.</div>';
+    return;
+  }
+  content.innerHTML = '<div class="mes-loading">⏳ Carregando dados do mês...<br>Aguarde um momento.</div>';
+
+  const startISO = `${mesViewYear}-${String(mesViewMonth).padStart(2,'0')}-01`;
+  let endYear = mesViewYear, endMonth = mesViewMonth + 1;
+  if (endMonth > 12) { endMonth = 1; endYear++; }
+  const endISO = `${endYear}-${String(endMonth).padStart(2,'0')}-01`;
+
+  try {
+    let cursor = undefined;
+    const allResults = [];
+    do {
+      const body = {
+        filter:{ and:[
+          {property:'Data',date:{on_or_after:startISO}},
+          {property:'Data',date:{before:endISO}}
+        ]},
+        sorts:[{property:'Data',direction:'descending'}],
+        page_size:100
+      };
+      if (cursor) body.start_cursor = cursor;
+      const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allResults.push(...data.results);
+      cursor = data.has_more ? data.next_cursor : undefined;
+    } while (cursor);
+
+    const items = allResults.map(pg => {
+      const p = pg.properties;
+      const funcionaria = p['Funcionária']?.select?.name||'?';
+      return {
+        funcionaria,
+        valor: p['Valor Unit.']?.number||0,
+        data:  (p['Data']?.date?.start||'').slice(0,10),
+        tipo:  tipoDoFuncionario(funcionaria)
+      };
+    });
+
+    const byEmp = {}; let totalMes = 0, totalRegs = 0;
+    const diasUnicos = new Set();
+    items.forEach(i => {
+      const v = i.valor||0;
+      if (!byEmp[i.funcionaria]) byEmp[i.funcionaria]={total:0,count:0,tipo:i.tipo};
+      byEmp[i.funcionaria].total += v; byEmp[i.funcionaria].count++;
+      totalMes += v; totalRegs++;
+      if (i.data) diasUnicos.add(i.data);
+    });
+    const mediaDia = diasUnicos.size > 0 ? totalMes / diasUnicos.size : 0;
+    const empSorted = Object.entries(byEmp).sort((a,b)=>b[1].total-a[1].total);
+
+    const empCardsHtml = empSorted.map(([nome,s])=>{
+      const cor = EMP_COLORS[nome]||'#94a3b8';
+      const lbl = labelContagem(s.tipo, s.count);
+      return `<div class="mes-emp-card" style="border-left-color:${cor}">
+        <div class="mes-emp-avatar" style="background:${cor}">${nome[0]}</div>
+        <div class="mes-emp-info">
+          <div class="mes-emp-nome">${nome}</div>
+          <div class="mes-emp-detalhe">${s.count} ${lbl}</div>
+        </div>
+        <div class="mes-emp-valor">${fmt(s.total)}</div>
+      </div>`;
+    }).join('');
+
+    content.innerHTML = `
+      <div class="mes-resumo-card">
+        <div class="mrc-label">Total do Mês</div>
+        <div class="mrc-value">${fmt(totalMes)}</div>
+        <div class="mrc-sub">${totalRegs} registro${totalRegs!==1?'s':''} · ${diasUnicos.size} dia${diasUnicos.size!==1?'s':''}</div>
+        <div class="mrc-grid">
+          <div class="mrc-mini"><div class="mrc-mini-label">Registros</div><div class="mrc-mini-val">${totalRegs}</div></div>
+          <div class="mrc-mini"><div class="mrc-mini-label">Média/dia</div><div class="mrc-mini-val">${fmt(mediaDia)}</div></div>
+        </div>
+      </div>
+      ${empCardsHtml || '<div class="mes-no-token">Nenhum registro neste mês.</div>'}`;
+  } catch(e) {
+    content.innerHTML = `<div class="mes-no-token">Erro: ${e.message}</div>`;
+  }
 }
 
 function toggleHistoryDay(ds) {
