@@ -643,6 +643,17 @@
     }
     .btn-wpp-quinzena:active { transform: scale(0.97); }
 
+    /* ── DUPLICATE CONFIRM ── */
+    .dup-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 350;
+      display: none; align-items: flex-end; backdrop-filter: blur(2px);
+    }
+    .dup-overlay.open { display: flex; }
+    .dup-sheet {
+      background: var(--card); border-radius: 26px 26px 0 0; width: 100%;
+      padding: 22px 20px max(20px, env(safe-area-inset-bottom));
+    }
+
     /* ── SECTION DIVIDER WITH LINE ── */
     .section-label-line {
       display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
@@ -693,8 +704,9 @@
       <div class="divida-line">Total: <strong>$3,500</strong></div>
       <div class="divida-line">Descontado: <strong id="jdDescontado">$0</strong> (<span id="jdVezes">0</span>× $50)</div>
       <div class="divida-line">Saldo devedor: <strong id="jdSaldo">$3,500</strong></div>
-      <div class="divida-line" style="font-size:12px;opacity:0.7;margin-top:2px">Próximo desconto: $50 esta semana</div>
-      <button class="btn-divida" onclick="registrarDescontoJaime()">Registrar desconto desta semana ($50)</button>
+      <div class="divida-line">Último desconto: <strong id="jdUltimo">—</strong></div>
+      <div class="divida-line">Próximo: <strong id="jdProximo">—</strong></div>
+      <button class="btn-divida" id="btnDividaJaime" onclick="registrarDescontoJaime()">Registrar desconto desta semana ($50)</button>
     </div>
   </div>
 
@@ -924,6 +936,19 @@
     <div class="confirm-actions">
       <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancelar</button>
       <button class="btn-confirm-del" onclick="confirmRemove()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DUPLICATE CONFIRM ══ -->
+<div class="dup-overlay" id="dupModal">
+  <div class="dup-sheet">
+    <div class="modal-handle"></div>
+    <div class="confirm-title">⚠️ Duplicata detectada</div>
+    <div class="confirm-sub" id="dupText">Já existe um registro igual hoje.</div>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="closeDup(true)">Cancelar</button>
+      <button class="btn-confirm-del" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 3px 10px rgba(234,88,12,0.3)" onclick="closeDup(false)">Adicionar mesmo assim</button>
     </div>
   </div>
 </div>
@@ -1182,6 +1207,36 @@ function atualizarCardDivida() {
   document.getElementById('jdDescontado').textContent = `$${descontado.toLocaleString('en-US')}`;
   document.getElementById('jdVezes').textContent      = vezes;
   document.getElementById('jdSaldo').textContent      = `$${saldo.toLocaleString('en-US')}`;
+
+  const ultimoISO = ls('lf_jaime_ultimo_desconto');
+  let podeDescontar = true, diasFaltando = 0, proximoISO = null;
+  if (ultimoISO) {
+    const ultimo = new Date(ultimoISO+'T00:00:00');
+    const hoje   = new Date(todayISO()+'T00:00:00');
+    const diff   = Math.floor((hoje - ultimo) / 86400000);
+    diasFaltando = 7 - diff;
+    if (diff < 7) podeDescontar = false;
+    const prox = new Date(ultimoISO+'T00:00:00');
+    prox.setDate(prox.getDate() + 7);
+    proximoISO = `${prox.getFullYear()}-${String(prox.getMonth()+1).padStart(2,'0')}-${String(prox.getDate()).padStart(2,'0')}`;
+  }
+
+  const ultEl  = document.getElementById('jdUltimo');
+  const proxEl = document.getElementById('jdProximo');
+  if (ultEl)  ultEl.textContent  = ultimoISO  ? fmtData(ultimoISO)  : '—';
+  if (proxEl) proxEl.textContent = proximoISO ? fmtData(proximoISO) : '—';
+
+  const btn = document.getElementById('btnDividaJaime');
+  if (btn) {
+    if (saldo <= 0) {
+      btn.disabled = true; btn.textContent = '✅ Dívida quitada';
+    } else if (!podeDescontar) {
+      btn.disabled = true;
+      btn.textContent = diasFaltando > 0 ? `Próximo desconto em ${diasFaltando} dia${diasFaltando!==1?'s':''}` : 'Registrar desconto ($50)';
+    } else {
+      btn.disabled = false; btn.textContent = 'Registrar desconto desta semana ($50)';
+    }
+  }
 }
 
 function registrarDescontoJaime() {
@@ -1190,8 +1245,30 @@ function registrarDescontoJaime() {
   if (atual >= cfg.total) { showToast('💳 Dívida já quitada!'); return; }
   const novo = atual + cfg.descontoSemanal;
   ls('lf_jaime_descontado', String(novo));
+  ls('lf_jaime_ultimo_desconto', todayISO());
   atualizarCardDivida();
   showToast(`💳 Desconto de $${cfg.descontoSemanal} registrado!`);
+}
+
+// ─── DUPLICATE CHECK ─────────────────────────
+let _pendingDupCb = null;
+
+function checkDuplicata(nome, unidade, data, onConfirm) {
+  if (!unidade) { onConfirm(); return; }
+  const dup = [...limpezas, ...notionHojeItems].find(l =>
+    l.funcionaria===nome && l.unidade===unidade && l.data===data
+  );
+  if (!dup) { onConfirm(); return; }
+  _pendingDupCb = onConfirm;
+  document.getElementById('dupText').textContent =
+    `${nome} já tem uma limpeza registrada na unidade ${unidade} hoje. Deseja adicionar mesmo assim?`;
+  document.getElementById('dupModal').classList.add('open');
+}
+
+function closeDup(cancel) {
+  document.getElementById('dupModal').classList.remove('open');
+  if (!cancel && _pendingDupCb) _pendingDupCb();
+  _pendingDupCb = null;
 }
 
 // ─── UTILS ───────────────────────────────────
@@ -1377,31 +1454,35 @@ function adicionarLimpeza() {
     if (valor <= 0) { showToast('⚠️ Digite o valor');     return; }
   }
 
-  limpezas.unshift({
-    id: uid(), funcionaria: nome, unidade, valor, extra, extraDesc, horas,
-    descricao, unidadesAtendidas, tipo, data, saved: false, notionId: null
-  });
-  salvarLocal(); render();
+  const _inserir = () => {
+    limpezas.unshift({
+      id: uid(), funcionaria: nome, unidade, valor, extra, extraDesc, horas,
+      descricao, unidadesAtendidas, tipo, data, saved: false, notionId: null
+    });
+    salvarLocal(); render();
 
-  // Reset campos (mantém Darwin com valor fixo)
-  document.getElementById('inputHoras').value             = '';
-  document.getElementById('inputExtra').value             = '';
-  document.getElementById('inputExtraDesc').value         = '';
-  document.getElementById('inputDescricao').value         = '';
-  document.getElementById('inputUnidadesAtendidas').value = '';
-  if (cfg?.tipo === 'landscaping' && cfg?.pagamento === 'fixo_quinzenal') {
-    document.getElementById('inputValor').value = cfg.valorFixo;
-  } else {
-    clearUnit();
-    document.getElementById('inputValor').value = '';
-  }
+    // Reset campos (mantém Darwin com valor fixo)
+    document.getElementById('inputHoras').value             = '';
+    document.getElementById('inputExtra').value             = '';
+    document.getElementById('inputExtraDesc').value         = '';
+    document.getElementById('inputDescricao').value         = '';
+    document.getElementById('inputUnidadesAtendidas').value = '';
+    if (cfg?.tipo === 'landscaping' && cfg?.pagamento === 'fixo_quinzenal') {
+      document.getElementById('inputValor').value = cfg.valorFixo;
+    } else {
+      clearUnit();
+      document.getElementById('inputValor').value = '';
+    }
 
-  // Foco no campo apropriado
-  if (cfg?.tipo === 'supervisao')         document.getElementById('inputHoras').focus();
-  else if (cfg?.tipo === 'landscaping')   document.getElementById('inputDescricao').focus();
-  else                                    document.getElementById('inputUnidade').focus();
+    // Foco no campo apropriado
+    if (cfg?.tipo === 'supervisao')       document.getElementById('inputHoras').focus();
+    else if (cfg?.tipo === 'landscaping') document.getElementById('inputDescricao').focus();
+    else                                  document.getElementById('inputUnidade').focus();
 
-  showToast('✅ Registro adicionado!');
+    showToast('✅ Registro adicionado!');
+  };
+
+  checkDuplicata(nome, unidade, data, _inserir);
 }
 
 // ─── REMOVER (com confirmação) ────────────────
