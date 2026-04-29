@@ -1346,8 +1346,8 @@ async function fetchHojeDoNotion(dateISO) {
           funcionaria,
           unidade:     p['Unidade']?.select?.name||'',
           valor:       p['Valor Unit.']?.number||0,
-          extra:       0,
-          extraDesc:   '',
+          extra:       p['Extra']?.number||0,
+          extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
           horas:       0,
           descricao:   '',
           unidadesAtendidas: '',
@@ -1761,7 +1761,9 @@ async function salvarNotion() {
       'Valor Unit.': { number:l.valor||0 },
       'Data':        { date:{start:l.data} },
       'Mês':         { select:{name:getMes(l.data)} },
-      'Pago?':       { checkbox:false }
+      'Pago?':       { checkbox:false },
+      'Extra':       { number: l.extra||0 },
+      'Extra Desc':  { rich_text:[{text:{content:l.extraDesc||''}}] }
     };
     if (l.unidade) props['Unidade'] = { select:{name:l.unidade} };
     const body = { parent:{ database_id:DB_ID }, properties:props };
@@ -1894,7 +1896,8 @@ async function loadHistory() {
         funcionaria,
         unidade:     p['Unidade']?.select?.name||'',
         valor:       p['Valor Unit.']?.number||0,
-        extra:       0,
+        extra:       p['Extra']?.number||0,
+        extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
         pago:        p['Pago?']?.checkbox||false,
         data:        ds,
         tipo:        tipoDoFuncionario(funcionaria)
