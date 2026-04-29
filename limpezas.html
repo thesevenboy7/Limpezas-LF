@@ -404,14 +404,14 @@
     /* ── PAYMENT SUMMARY ── */
     .btn-copiar {
       width: 100%; height: 50px;
-      background: linear-gradient(135deg, #25D366 0%, #1fad55 100%);
+      background: linear-gradient(135deg, #1e3a5f, #2563eb);
       color: white; border: none; border-radius: 16px; font-size: 15px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
       margin-bottom: 14px; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 4px 14px rgba(37,211,102,0.35);
+      box-shadow: 0 4px 14px rgba(37,99,235,0.35);
       transition: transform 0.12s, box-shadow 0.12s;
     }
-    .btn-copiar:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(37,211,102,0.2); }
+    .btn-copiar:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(37,99,235,0.2); }
     .pagamento-total-card {
       background: linear-gradient(135deg, #0a1f38 0%, #1e3a5f 100%);
       border-radius: 16px; padding: 16px; margin-bottom: 8px;
@@ -1951,36 +1951,8 @@ async function loadHistory() {
       </div>
       ${empPayCards}`;
 
-    // ── Stats por funcionário ──
-    const wStats={}; let wTotal=0,wCount=0;
-    for (const i of allHistoryItems) {
-      const v=(i.valor||0)+(i.extra||0);
-      if (!wStats[i.funcionaria]) wStats[i.funcionaria]={total:0,count:0,tipo:i.tipo};
-      wStats[i.funcionaria].total+=v; wStats[i.funcionaria].count++;
-      wTotal+=v; wCount++;
-    }
-    let weekHtml='';
-    if (wCount>0) {
-      const empCards = Object.entries(wStats)
-        .sort((a,b)=>b[1].total-a[1].total)
-        .map(([nome,s])=>{
-          const cor=EMP_COLORS[nome]||'#94a3b8';
-          return `<div class="week-stat-card" style="border-left-color:${cor}">
-            <div class="wsc-name">${nome}</div><div class="wsc-total">${fmt(s.total)}</div>
-            <div class="wsc-count">${s.count} ${labelContagem(s.tipo,s.count)}</div></div>`;
-        }).join('');
-      const nF=Object.keys(wStats).length;
-      weekHtml = `
-        <div class="section-label" style="margin-bottom:8px;margin-top:14px">Por funcionário</div>
-        <div class="week-stats-grid">${empCards}
-          <div class="week-stat-card total-week">
-            <div class="wsc-name">Total do período</div><div class="wsc-total">${fmt(wTotal)}</div>
-            <div class="wsc-count">${wCount} registro${wCount!==1?'s':''} · ${nF} funcionário${nF!==1?'s':''}</div>
-          </div></div>`;
-    }
-
     if (!dates.length) {
-      content.innerHTML = payHtml+weekHtml+'<div class="history-empty" style="margin-top:12px">Nenhum registro no período.</div>';
+      content.innerHTML = payHtml+'<div class="history-empty" style="margin-top:12px">Nenhum registro no período.</div>';
       return;
     }
 
@@ -2025,7 +1997,7 @@ async function loadHistory() {
         </div>`;
     }).join('');
 
-    content.innerHTML = payHtml + weekHtml
+    content.innerHTML = payHtml
       + `<div class="section-label" style="margin-bottom:8px;margin-top:14px">Por dia</div>`
       + daysHtml;
 
