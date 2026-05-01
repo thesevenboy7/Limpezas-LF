@@ -712,7 +712,7 @@ document.getElementById('inp-pin').addEventListener('keydown', e => { if (e.key 
 document.getElementById('inp-nome').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-pin').focus(); });
 
 async function fazerLogin() {
-  const nome = document.getElementById('inp-nome').value.trim();
+  const nome = document.getElementById('inp-nome').value.trim().toLowerCase();
   const pin  = document.getElementById('inp-pin').value.trim();
   const erro = document.getElementById('login-erro');
   const btn  = document.getElementById('btn-login');
