@@ -16,7 +16,7 @@
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, Notion-Version',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, Notion-Version, X-Role',
 };
 
 const KV_TTL        = 60 * 60 * 24 * 30;  // 30 dias

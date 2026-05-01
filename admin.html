@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f2744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Lyrios — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #eef2f7; --card: #ffffff;
+      --green: #22c55e; --green-dark: #16a34a;
+      --red: #ef4444; --red-dark: #dc2626;
+      --blue: #3b82f6; --blue-dark: #2563eb;
+      --yellow: #f59e0b; --yellow-dark: #d97706;
+      --navy: #0f2744; --navy-mid: #1e3a5f;
+      --text: #1a2740; --text-muted: #64748b;
+      --border: #dde3ed;
+      --shadow: 0 2px 8px rgba(15,39,68,0.08), 0 1px 3px rgba(15,39,68,0.05);
+      --shadow-md: 0 6px 16px rgba(15,39,68,0.10), 0 2px 6px rgba(15,39,68,0.06);
+      --radius: 16px;
+    }
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    body { padding-bottom: 90px; }
+
+    /* ── LOGIN ── */
+    #screen-login {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #0f2744 0%, #1e3a5f 55%, #1a4570 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px max(32px, env(safe-area-inset-bottom));
+    }
+    #screen-login.hidden { display: none; }
+    .login-logo { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .login-logo span { color: var(--green); }
+    .login-role { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 36px; }
+    .login-card { background: #fff; border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+    .login-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+    .login-input {
+      width: 100%; height: 52px; border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: inherit; font-size: 16px; color: var(--text); padding: 0 14px;
+      background: var(--bg); margin-bottom: 18px; outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .login-input:focus { border-color: var(--blue); background: #fff; }
+    .login-pin { letter-spacing: 6px; font-weight: 700; font-size: 20px; text-align: center; }
+    .btn-login {
+      width: 100%; height: 56px;
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 100%);
+      color: #fff; border: none; border-radius: 16px; font-family: inherit; font-size: 18px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(15,39,68,0.45); transition: transform 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-login:active { transform: scale(0.97); }
+    .btn-login:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+    #login-erro { margin-top: 14px; padding: 10px 14px; background: #fee2e2; border-radius: 10px; color: var(--red-dark); font-size: 14px; font-weight: 600; text-align: center; }
+
+    /* ── MAIN ── */
+    #screen-main { display: none; min-height: 100vh; }
+    #screen-main.visible { display: block; }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 60%, #1a4570 100%);
+      color: #fff; padding: 16px 20px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(15,39,68,0.35);
+    }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .header-logo { font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
+    .header-logo span.dot { color: var(--green); }
+    .admin-badge {
+      display: inline-block; background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.9);
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 2px 8px; border-radius: 6px; margin-left: 8px; vertical-align: middle;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .header-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+    .btn-logout {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.75); height: 34px; padding: 0 14px; border-radius: 10px;
+      font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-logout:active { background: rgba(255,255,255,0.22); }
+
+    /* ── DATE ROW ── */
+    .date-row {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 11px 20px; background: var(--card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 63px; z-index: 90;
+    }
+    .date-row input[type="date"] {
+      height: 40px; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 0 12px; font-size: 15px; font-family: inherit; color: var(--text);
+      background: var(--bg); outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .date-row input[type="date"]:focus { border-color: var(--blue); background: #fff; }
+    .btn-reload {
+      height: 40px; width: 40px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--card); font-size: 18px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+    }
+    .btn-reload:active { background: var(--bg); }
+
+    /* ── TAB CONTENT ── */
+    .tab-content { padding: 14px 16px; }
+
+    /* ── SECTION HEAD ── */
+    .section-head { display: flex; align-items: center; gap: 8px; margin: 14px 0 10px; }
+    .section-head-title {
+      font-size: 10px; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.12em; white-space: nowrap;
+    }
+    .section-head::after {
+      content: ''; flex: 1; height: 2px; border-radius: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ── CONDO GROUP ── */
+    .condo-group { margin-bottom: 18px; }
+    .condo-label {
+      font-size: 11px; font-weight: 800; color: var(--navy); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 8px;
+      padding: 6px 10px; border-radius: 8px; border-left: 3px solid var(--navy);
+      background: rgba(15,39,68,0.05); display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── UNIT CARD ── */
+    .unit-card {
+      background: var(--card); border-radius: 14px; padding: 11px 13px;
+      box-shadow: var(--shadow); margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.7); border-left: 4px solid var(--border);
+      display: flex; align-items: center; gap: 10px; transition: box-shadow 0.18s;
+    }
+    .unit-card:hover { box-shadow: var(--shadow-md); }
+    .unit-card.limpeza   { border-left-color: #22c55e; }
+    .unit-card.privada   { border-left-color: #f59e0b; }
+    .unit-card.refrescar { border-left-color: #3b82f6; }
+    .unit-card.terceir   { border-left-color: #94a3b8; }
+    .unit-num { font-size: 17px; font-weight: 900; color: var(--navy); min-width: 56px; flex-shrink: 0; }
+    .unit-info { flex: 1; min-width: 0; }
+    .tipo-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-bottom: 7px;
+    }
+    .tipo-limpeza   { background: #dcfce7; color: #15803d; }
+    .tipo-privada   { background: #fef3c7; color: #92400e; }
+    .tipo-refrescar { background: #dbeafe; color: #1e40af; }
+    .tipo-terceir   { background: #f1f5f9; color: #475569; }
+    .unit-select {
+      width: 100%; height: 40px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 14px; color: var(--text); padding: 0 32px 0 10px;
+      background-color: var(--bg); outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .unit-select:focus { border-color: var(--blue); background-color: #fff; }
+    .unit-select.assigned { border-color: var(--green); background-color: #f0fdf4; }
+    .terceir-input {
+      margin-top: 7px; width: 100%; height: 36px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 13px; padding: 0 10px;
+      background: var(--bg); outline: none; color: var(--text); transition: border-color 0.15s;
+    }
+    .terceir-input:focus { border-color: var(--blue); }
+    .btn-remove-terceir {
+      background: #fee2e2; border: none; color: var(--red); width: 30px; height: 30px;
+      border-radius: 8px; font-size: 18px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-weight: 700;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-remove-terceir:active { background: #fecaca; }
+
+    /* ── IMPORT PANEL ── */
+    .import-panel {
+      background: var(--card); border-radius: 14px; padding: 14px;
+      box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.7); margin-bottom: 12px;
+    }
+    .import-textarea {
+      width: 100%; min-height: 70px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 14px; padding: 10px 12px; background: var(--bg);
+      outline: none; resize: vertical; color: var(--text); transition: border-color 0.15s; margin-bottom: 10px;
+    }
+    .import-textarea:focus { border-color: var(--blue); }
+    .btn-import {
+      height: 42px; padding: 0 20px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 3px 10px rgba(37,99,235,0.3); -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s;
+    }
+    .btn-import:active { transform: scale(0.97); }
+
+    /* ── SAVE BAR ── */
+    .save-bar {
+      position: fixed; bottom: 66px; left: 0; right: 0;
+      padding: 10px 16px; background: rgba(238,242,247,0.96);
+      backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.6);
+    }
+    .btn-save-atrib {
+      width: 100%; height: 52px;
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 100%);
+      color: white; border: none; border-radius: 14px; font-family: inherit;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(15,39,68,0.35); transition: transform 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-save-atrib:active { transform: scale(0.97); }
+    .btn-save-atrib:disabled { background: #94a3b8; box-shadow: none; }
+
+    /* ── STATUS CHIPS ── */
+    .status-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .status-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+      border: 1.5px solid transparent;
+    }
+    .chip-total     { background: linear-gradient(135deg, #0f2744, #1e3a5f); color: white; }
+    .chip-pendente  { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+    .chip-aguardando{ background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .chip-aprovada  { background: #dcfce7; color: #15803d; border-color: #86efac; }
+    .chip-rejeitada { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+    /* ── STATUS CARD ── */
+    .status-card {
+      background: var(--card); border-radius: 14px; padding: 12px 14px;
+      box-shadow: var(--shadow); margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.7); border-left: 4px solid var(--border);
+      display: flex; align-items: center; gap: 12px; transition: box-shadow 0.18s;
+    }
+    .status-card:hover { box-shadow: var(--shadow-md); }
+    .status-card.st-pendente   { border-left-color: #94a3b8; }
+    .status-card.st-aguardando { border-left-color: #f59e0b; }
+    .status-card.st-aprovada   { border-left-color: #22c55e; }
+    .status-card.st-rejeitada  { border-left-color: #ef4444; }
+    .sc-num { font-size: 19px; font-weight: 900; color: var(--navy); min-width: 52px; flex-shrink: 0; }
+    .sc-info { flex: 1; min-width: 0; }
+    .sc-func { font-size: 13px; font-weight: 700; }
+    .sc-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .sc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .status-badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+    .badge-pendente  { background: #f1f5f9; color: #475569; }
+    .badge-aguardando{ background: #fef3c7; color: #92400e; }
+    .badge-aprovada  { background: #dcfce7; color: #15803d; }
+    .badge-rejeitada { background: #fee2e2; color: #dc2626; }
+    .sc-thumb {
+      width: 48px; height: 48px; border-radius: 8px; object-fit: cover;
+      cursor: pointer; border: 2px solid var(--border); transition: transform 0.18s; flex-shrink: 0;
+    }
+    .sc-thumb:active { transform: scale(0.92); }
+
+    /* ── SENHAS ── */
+    .master-card {
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 100%);
+      border-radius: 16px; padding: 18px 20px; margin-bottom: 14px;
+      box-shadow: 0 6px 20px rgba(15,39,68,0.25);
+    }
+    .master-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .master-code-row { display: flex; align-items: center; gap: 12px; }
+    .master-code-val { font-size: 22px; font-weight: 900; color: white; letter-spacing: 4px; font-family: monospace; flex: 1; }
+    .btn-reveal {
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); color: white;
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; font-family: inherit; flex-shrink: 0;
+    }
+    .btn-reveal:active { background: rgba(255,255,255,0.24); }
+    .btn-bulk {
+      width: 100%; height: 46px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: white; font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-bottom: 12px; box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+      -webkit-tap-highlight-color: transparent; transition: transform 0.12s;
+    }
+    .btn-bulk:active { transform: scale(0.97); }
+    .search-input {
+      width: 100%; height: 44px; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 0 14px; font-size: 15px; font-family: inherit; color: var(--text);
+      background: var(--card); outline: none; transition: border-color 0.15s; margin-bottom: 12px;
+    }
+    .search-input:focus { border-color: var(--blue); }
+    .senha-card {
+      background: var(--card); border-radius: 12px; padding: 12px 14px;
+      box-shadow: var(--shadow); margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+    .senha-main-row { display: flex; align-items: center; gap: 12px; }
+    .senha-unit-info { min-width: 66px; flex-shrink: 0; }
+    .senha-unit { font-size: 15px; font-weight: 800; color: var(--navy); }
+    .senha-local { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .senha-mid { flex: 1; min-width: 0; }
+    .senha-val { font-size: 15px; font-weight: 700; font-family: monospace; color: var(--text); }
+    .senha-val.none { color: var(--text-muted); font-family: inherit; font-size: 13px; font-weight: 400; }
+    .senha-updated { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .btn-edit-senha {
+      height: 34px; padding: 0 12px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; font-family: inherit; flex-shrink: 0;
+    }
+    .btn-edit-senha:active { background: var(--border); }
+    .senha-edit-row {
+      display: none; margin-top: 9px; gap: 8px; align-items: center;
+    }
+    .senha-edit-row.visible { display: flex; }
+    .senha-edit-input {
+      flex: 1; height: 38px; border: 1.5px solid var(--blue); border-radius: 8px;
+      padding: 0 10px; font-family: monospace; font-size: 15px; font-weight: 700;
+      color: var(--text); background: #fff; outline: none;
+    }
+    .btn-save-senha {
+      height: 38px; padding: 0 14px; border-radius: 8px; border: none;
+      background: var(--green); color: white; font-family: inherit;
+      font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-save-senha:active { background: var(--green-dark); }
+    .btn-cancel-edit {
+      height: 38px; width: 38px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--bg); font-size: 18px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-cancel-edit:active { background: var(--border); }
+
+    /* ── GALERIA ── */
+    .galeria-filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-select {
+      height: 38px; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 0 28px 0 10px; font-family: inherit; font-size: 13px; color: var(--text);
+      background-color: var(--bg); outline: none; -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--blue); }
+    .galeria-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .galeria-item {
+      background: var(--card); border-radius: 12px; overflow: hidden;
+      box-shadow: var(--shadow); cursor: pointer; transition: box-shadow 0.18s;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+    .galeria-item:active { box-shadow: none; transform: scale(0.98); }
+    .galeria-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+    .galeria-meta { padding: 8px 10px; }
+    .galeria-unit { font-size: 14px; font-weight: 800; color: var(--navy); }
+    .galeria-func { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .galeria-time { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .galeria-empty {
+      grid-column: 1 / -1; text-align: center; padding: 44px 20px;
+      color: var(--text-muted); background: var(--card); border-radius: 14px;
+      box-shadow: var(--shadow); font-size: 14px; line-height: 1.7;
+    }
+    .galeria-empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── LIGHTBOX ── */
+    #lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 600;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; flex-direction: column;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox-img { max-width: 100%; max-height: 75vh; border-radius: 10px; object-fit: contain; }
+    #lightbox-info { color: rgba(255,255,255,0.8); text-align: center; margin-top: 14px; font-size: 13px; font-weight: 600; }
+    #lightbox-close {
+      position: absolute; top: 18px; right: 18px;
+      background: rgba(255,255,255,0.14); border: none; color: white;
+      width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #lightbox-close:active { background: rgba(255,255,255,0.24); }
+
+    /* ── MODAL BULK ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 400;
+      display: none; align-items: flex-end; backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: var(--card); border-radius: 26px 26px 0 0; width: 100%;
+      padding: 24px 20px max(20px, env(safe-area-inset-bottom)); max-height: 90vh; overflow-y: auto;
+    }
+    .modal-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto 20px; }
+    .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+    .modal-textarea {
+      width: 100%; min-height: 130px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: monospace; font-size: 14px; padding: 12px; background: var(--bg);
+      outline: none; resize: vertical; color: var(--text); transition: border-color 0.15s; margin-bottom: 14px;
+    }
+    .modal-textarea:focus { border-color: var(--blue); }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-ok {
+      flex: 1; height: 52px;
+      background: linear-gradient(135deg, #0f2744, #1e3a5f);
+      color: white; border: none; border-radius: 14px; font-family: inherit;
+      font-size: 16px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-modal-ok:active { opacity: 0.9; }
+    .btn-modal-cancel {
+      height: 52px; padding: 0 22px; background: var(--bg); color: var(--text-muted);
+      border: 2px solid var(--border); border-radius: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 11px 22px; border-radius: 22px;
+      font-size: 14px; font-weight: 600; z-index: 700; opacity: 0; transition: opacity 0.25s;
+      pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── LOADING / EMPTY ── */
+    .loading { text-align: center; color: var(--text-muted); padding: 36px 20px; font-size: 14px; line-height: 1.8; }
+    .empty-state {
+      text-align: center; color: var(--text-muted); padding: 36px 20px;
+      background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+      font-size: 14px; line-height: 1.7;
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+      background: var(--card); border-top: 1px solid var(--border);
+      display: flex; height: 66px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      box-shadow: 0 -4px 16px rgba(15,39,68,0.08);
+    }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; border: none; background: none; font-family: inherit;
+      color: var(--text-muted); transition: color 0.18s; padding-top: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-tab.active { color: var(--navy); }
+    .nav-tab-icon { font-size: 20px; line-height: 1; }
+    .nav-tab-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="screen-login">
+  <div class="login-logo">Lyrios<span>.</span></div>
+  <div class="login-role">Administrador</div>
+  <div class="login-card">
+    <label class="login-label" for="inp-nome">Seu nome</label>
+    <input type="text" id="inp-nome" class="login-input" placeholder="Mario..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <label class="login-label" for="inp-pin">PIN</label>
+    <input type="password" id="inp-pin" class="login-input login-pin" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password">
+    <button class="btn-login" id="btn-login">🔐 Entrar</button>
+    <div id="login-erro" hidden></div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="screen-main">
+
+  <header class="header">
+    <div class="header-row">
+      <div>
+        <div class="header-logo">Lyrios<span class="dot">.</span><span class="admin-badge">ADMIN</span></div>
+        <div class="header-sub" id="header-sub">—</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <!-- ABA: ATRIBUIÇÕES -->
+  <div id="tab-atribuicao" style="display:none">
+    <div class="date-row">
+      <input type="date" id="date-atrib">
+      <button class="btn-reload" onclick="loadAtribuicoes()" title="Recarregar">↻</button>
+    </div>
+    <div class="tab-content">
+      <div id="atrib-content"><div class="loading">Carregando atribuições...</div></div>
+    </div>
+  </div>
+
+  <!-- ABA: STATUS -->
+  <div id="tab-status" style="display:none">
+    <div class="date-row">
+      <input type="date" id="date-status">
+      <button class="btn-reload" onclick="loadStatus()" title="Recarregar">↻</button>
+    </div>
+    <div class="tab-content">
+      <div class="status-chips" id="status-chips"></div>
+      <div id="status-content"><div class="loading">Carregando status...</div></div>
+    </div>
+  </div>
+
+  <!-- ABA: SENHAS -->
+  <div id="tab-senhas" style="display:none">
+    <div class="tab-content">
+      <div class="master-card">
+        <div class="master-label">Código Mestre</div>
+        <div class="master-code-row">
+          <div class="master-code-val" id="master-code-val">••••••</div>
+          <button class="btn-reveal" id="btn-reveal" onclick="toggleMaster()">Revelar</button>
+        </div>
+      </div>
+      <button class="btn-bulk" onclick="openBulkModal()">📋 Importar senhas em lote</button>
+      <input type="text" class="search-input" id="senha-search" placeholder="🔍 Buscar unidade ou condomínio..." oninput="renderSenhas()">
+      <div id="senhas-content"><div class="loading">Carregando senhas...</div></div>
+    </div>
+  </div>
+
+  <!-- ABA: GALERIA -->
+  <div id="tab-galeria" style="display:none">
+    <div class="date-row">
+      <input type="date" id="date-galeria">
+      <button class="btn-reload" onclick="loadGaleria()" title="Recarregar">↻</button>
+    </div>
+    <div class="tab-content">
+      <div class="galeria-filters">
+        <select class="filter-select" id="filter-condo" onchange="renderGaleria()">
+          <option value="">Todos condomínios</option>
+          <option>Legacy</option>
+          <option>The Villas</option>
+          <option>The Palms</option>
+          <option>Davenport</option>
+        </select>
+        <select class="filter-select" id="filter-func" onchange="renderGaleria()">
+          <option value="">Todas funcionárias</option>
+        </select>
+      </div>
+      <div class="galeria-grid" id="galeria-content">
+        <div class="loading" style="grid-column:1/-1">Carregando fotos...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-main -->
+
+<!-- SAVE BAR — Atribuições -->
+<div class="save-bar" id="save-bar-atrib" style="display:none">
+  <button class="btn-save-atrib" id="btn-save-atrib" onclick="saveAtribuicoes()">💾 Salvar atribuições</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-tab" id="navTab_atribuicao" onclick="switchTab('atribuicao')">
+    <span class="nav-tab-icon">📋</span>
+    <span class="nav-tab-label">Atribuições</span>
+  </button>
+  <button class="nav-tab" id="navTab_status" onclick="switchTab('status')">
+    <span class="nav-tab-icon">📊</span>
+    <span class="nav-tab-label">Status</span>
+  </button>
+  <button class="nav-tab" id="navTab_senhas" onclick="switchTab('senhas')">
+    <span class="nav-tab-icon">🔑</span>
+    <span class="nav-tab-label">Senhas</span>
+  </button>
+  <button class="nav-tab" id="navTab_galeria" onclick="switchTab('galeria')">
+    <span class="nav-tab-icon">🖼️</span>
+    <span class="nav-tab-label">Galeria</span>
+  </button>
+</nav>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-info"></div>
+</div>
+
+<!-- MODAL BULK SENHAS -->
+<div class="modal-overlay" id="bulk-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Importar senhas em lote</div>
+    <div class="modal-desc">Uma senha por linha no formato <strong>UNIDADE:SENHA</strong><br>Ex: <code>105:4512</code> ou <code>320:blue22</code></div>
+    <textarea class="modal-textarea" id="bulk-textarea" placeholder="105:4512&#10;162:9831&#10;320:blue22&#10;627:palm77"></textarea>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeBulkModal()">Cancelar</button>
+      <button class="btn-modal-ok" onclick="saveBulk()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTES ────────────────────────────────────────────────────────────
+
+const WORKER = 'https://lyrios-cleaning-worker.mariopimentel1610.workers.dev';
+
+const UNIDADES_SISTEMA = [
+  { nome: '105',    local: 'Legacy' },
+  { nome: '107',    local: 'Legacy' },
+  { nome: '144',    local: 'Legacy' },
+  { nome: '161',    local: 'Legacy' },
+  { nome: '162',    local: 'Legacy' },
+  { nome: '163',    local: 'Legacy' },
+  { nome: '166',    local: 'Legacy' },
+  { nome: '187',    local: 'Legacy' },
+  { nome: '189',    local: 'Legacy' },
+  { nome: '195',    local: 'Legacy' },
+  { nome: '199',    local: 'Legacy' },
+  { nome: '205',    local: 'Legacy' },
+  { nome: '207',    local: 'Legacy' },
+  { nome: '213',    local: 'Legacy' },
+  { nome: '243',    local: 'Legacy' },
+  { nome: '271',    local: 'Legacy' },
+  { nome: '22',     local: 'The Villas' },
+  { nome: '113 Q1', local: 'The Villas' },
+  { nome: '113 Q2', local: 'The Villas' },
+  { nome: '8927',   local: 'Davenport' },
+  { nome: '320',    local: 'The Palms' },
+  { nome: '325',    local: 'The Palms' },
+  { nome: '622',    local: 'The Palms' },
+  { nome: '627',    local: 'The Palms' },
+  { nome: '743',    local: 'The Palms' },
+];
+
+const FUNCIONARIAS = [
+  'Mireyda','Inosencia','Jaime','Rosita','Maria Eugenia',
+  'Francisca','Ana','Lany Franca','Darwin','Juan'
+];
+
+const LOCAIS_ORDEM  = ['Legacy','The Villas','Davenport','The Palms'];
+const LOCAIS_EMOJI  = { Legacy:'🏢', 'The Villas':'🏡', Davenport:'🌴', 'The Palms':'🌴' };
+
+// ── ESTADO ────────────────────────────────────────────────────────────────
+
+let sess              = null;
+let currentTab        = '';
+let atribKV           = {};
+let terceirizadasCards = [];
+let statusData        = {};
+let galeriaData       = {};
+let senhasData        = {};
+let masterCode        = '';
+let masterVisible     = false;
+let statusPollTimer   = null;
+let toastTimer        = null;
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtDataBR(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fmtTime(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
+}
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function showToast(msg, ms = 2800) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function adminHeaders() {
+  return { 'Content-Type': 'application/json', 'X-Role': 'admin' };
+}
+
+// ── SESSÃO ────────────────────────────────────────────────────────────────
+
+(function boot() {
+  try {
+    const raw = sessionStorage.getItem('lf_admin_session');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const diaAuth = parsed.autenticadaEm ? parsed.autenticadaEm.slice(0, 10) : null;
+      if (diaAuth === todayISO() && parsed.role === 'admin') {
+        sess = parsed;
+      } else {
+        sessionStorage.removeItem('lf_admin_session');
+      }
+    }
+  } catch {}
+
+  if (sess) {
+    mostrarMain();
+  } else {
+    document.getElementById('screen-login').classList.remove('hidden');
+  }
+})();
+
+document.getElementById('btn-login').addEventListener('click', fazerLogin);
+document.getElementById('inp-pin').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+document.getElementById('inp-nome').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-pin').focus(); });
+
+async function fazerLogin() {
+  const nome = document.getElementById('inp-nome').value.trim();
+  const pin  = document.getElementById('inp-pin').value.trim();
+  const erro = document.getElementById('login-erro');
+  const btn  = document.getElementById('btn-login');
+
+  erro.hidden = true;
+  if (!nome) { mostrarErroLogin('Digite seu nome'); return; }
+  if (pin.length !== 4) { mostrarErroLogin('PIN deve ter 4 dígitos'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    const res = await fetch(`${WORKER}/auth/pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, pin, role: 'admin' })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarErroLogin(data.error || 'Credenciais inválidas'); return; }
+
+    sess = { nome: data.nome, role: data.role, autenticadaEm: data.autenticadaEm };
+    sessionStorage.setItem('lf_admin_session', JSON.stringify(sess));
+    document.getElementById('screen-login').classList.add('hidden');
+    mostrarMain();
+  } catch {
+    mostrarErroLogin('Sem conexão com o servidor');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔐 Entrar';
+  }
+}
+
+function mostrarErroLogin(msg) {
+  const el = document.getElementById('login-erro');
+  el.textContent = msg;
+  el.hidden = false;
+}
+
+function mostrarMain() {
+  document.getElementById('screen-main').classList.add('visible');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.getElementById('header-sub').textContent =
+    (sess?.nome || '') + ' · ' + fmtDataBR(todayISO());
+
+  const hoje = todayISO();
+  document.getElementById('date-atrib').value   = hoje;
+  document.getElementById('date-status').value  = hoje;
+  document.getElementById('date-galeria').value = hoje;
+
+  switchTab('atribuicao');
+}
+
+function logout() {
+  sessionStorage.removeItem('lf_admin_session');
+  location.reload();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['atribuicao','status','senhas','galeria'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`navTab_${t}`).classList.toggle('active', t === tab);
+  });
+  document.getElementById('save-bar-atrib').style.display = tab === 'atribuicao' ? 'block' : 'none';
+
+  clearInterval(statusPollTimer);
+
+  if (tab === 'atribuicao') loadAtribuicoes();
+  if (tab === 'status') {
+    loadStatus();
+    statusPollTimer = setInterval(loadStatus, 30000);
+  }
+  if (tab === 'senhas') loadSenhas();
+  if (tab === 'galeria') loadGaleria();
+}
+
+// ── ABA: ATRIBUIÇÕES ──────────────────────────────────────────────────────
+
+async function loadAtribuicoes() {
+  const data = document.getElementById('date-atrib').value || todayISO();
+  document.getElementById('atrib-content').innerHTML = '<div class="loading">Carregando atribuições...</div>';
+  terceirizadasCards = [];
+
+  try {
+    const res = await fetch(`${WORKER}/kv/atribuicoes?data=${data}`, { headers: adminHeaders() });
+    atribKV = res.ok ? (await res.json()) : {};
+  } catch { atribKV = {}; }
+
+  renderAtribuicoes();
+}
+
+function buildAssignmentMap(kv) {
+  const map = {};
+  Object.entries(kv).forEach(([key, val]) => {
+    if (key === '_unidades') return;
+    if (Array.isArray(val)) val.forEach(u => { map[String(u)] = key; });
+  });
+  return map;
+}
+
+function funcOptions(selectedKey) {
+  const opts = FUNCIONARIAS.map(f =>
+    `<option value="${esc(f.toLowerCase())}" ${selectedKey === f.toLowerCase() ? 'selected' : ''}>${esc(f)}</option>`
+  ).join('');
+  return `<option value="">— não atribuído —</option>${opts}`;
+}
+
+function renderAtribuicoes() {
+  const el = document.getElementById('atrib-content');
+  const unidades = atribKV._unidades || {};
+  const assignMap = buildAssignmentMap(atribKV);
+  const units = Object.keys(unidades);
+
+  let html = '';
+
+  if (units.length === 0) {
+    html += `<div class="empty-state">
+      <div class="empty-icon">📅</div>
+      Nenhuma unidade enviada pelo Script para esta data.<br>Use o painel abaixo para importar manualmente.
+    </div>`;
+  } else {
+    const groups = {};
+    units.forEach(u => {
+      const local = unidades[u]?.local || 'Outro';
+      if (!groups[local]) groups[local] = [];
+      groups[local].push({ unit: u, tipo: unidades[u]?.tipo || 'limpeza' });
+    });
+
+    const allLocais = [...LOCAIS_ORDEM, ...Object.keys(groups).filter(l => !LOCAIS_ORDEM.includes(l))];
+    allLocais.forEach(local => {
+      if (!groups[local]) return;
+      html += `<div class="condo-group">
+        <div class="condo-label">${esc(LOCAIS_EMOJI[local] || '🏠')} ${esc(local)}</div>`;
+      groups[local].forEach(({ unit, tipo }) => {
+        const assigned = assignMap[String(unit)] || '';
+        const tipoLabel = tipo === 'privada' ? '🔒 Privada' : tipo === 'refrescar' ? '🌿 Refrescar' : '🧹 Limpeza';
+        html += `<div class="unit-card ${esc(tipo)}">
+          <div class="unit-num">${esc(unit)}</div>
+          <div class="unit-info">
+            <div class="tipo-tag tipo-${esc(tipo)}">${tipoLabel}</div>
+            <select class="unit-select atrib-select ${assigned ? 'assigned' : ''}" data-unit="${esc(unit)}" onchange="this.classList.toggle('assigned',!!this.value)">
+              ${funcOptions(assigned)}
+            </select>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  html += `
+    <div class="section-head"><span class="section-head-title">Import manual — Terceirizadas</span></div>
+    <div class="import-panel">
+      <textarea class="import-textarea" id="terceir-textarea"
+        placeholder="Cole aqui as limpezas da Gloria, Marina...&#10;Ex: 320 325 627 ou 320,325,627"></textarea>
+      <button class="btn-import" onclick="importTerceirizadas()">📥 Importar unidades</button>
+    </div>
+    <div id="terceir-cards"></div>
+  `;
+
+  el.innerHTML = html;
+  renderTerceirizadasCards();
+}
+
+function importTerceirizadas() {
+  const txt = document.getElementById('terceir-textarea').value;
+  const matches = txt.match(/\b\d{2,4}\b/g) || [];
+  const unique = [...new Set(matches)];
+  if (unique.length === 0) { showToast('Nenhum número de unidade encontrado'); return; }
+  let added = 0;
+  unique.forEach(u => {
+    if (!terceirizadasCards.find(c => c.unit === u)) {
+      terceirizadasCards.push({ unit: u, local: '', func: '' });
+      added++;
+    }
+  });
+  document.getElementById('terceir-textarea').value = '';
+  renderTerceirizadasCards();
+  showToast(added > 0 ? `${added} unidade(s) adicionada(s)` : 'Todas já importadas');
+}
+
+function renderTerceirizadasCards() {
+  const el = document.getElementById('terceir-cards');
+  if (!el) return;
+  if (terceirizadasCards.length === 0) { el.innerHTML = ''; return; }
+
+  el.innerHTML = terceirizadasCards.map((c, i) => `
+    <div class="unit-card terceir">
+      <div class="unit-num">${esc(c.unit)}</div>
+      <div class="unit-info" style="flex:1;min-width:0">
+        <div class="tipo-tag tipo-terceir">Terceirizada</div>
+        <input list="tlist-${i}" class="unit-select" style="background-image:none"
+          placeholder="Funcionária..." value="${esc(c.func)}"
+          oninput="terceirizadasCards[${i}].func=this.value">
+        <datalist id="tlist-${i}">
+          ${FUNCIONARIAS.map(f => `<option value="${esc(f)}">`).join('')}
+        </datalist>
+        <input class="terceir-input" placeholder="Condomínio (opcional)..." value="${esc(c.local)}"
+          oninput="terceirizadasCards[${i}].local=this.value">
+      </div>
+      <button class="btn-remove-terceir" onclick="removeTerceirizada(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function removeTerceirizada(idx) {
+  terceirizadasCards.splice(idx, 1);
+  renderTerceirizadasCards();
+}
+
+async function saveAtribuicoes() {
+  const data = document.getElementById('date-atrib').value || todayISO();
+  const btn  = document.getElementById('btn-save-atrib');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const atribuicoes = {};
+
+  document.querySelectorAll('.atrib-select').forEach(sel => {
+    const unit = sel.dataset.unit;
+    const func = sel.value;
+    if (!unit || !func) return;
+    if (!atribuicoes[func]) atribuicoes[func] = [];
+    atribuicoes[func].push(unit);
+  });
+
+  terceirizadasCards.forEach(c => {
+    const func = (c.func || '').trim().toLowerCase();
+    if (!func || !c.unit) return;
+    if (!atribuicoes[func]) atribuicoes[func] = [];
+    atribuicoes[func].push(c.unit);
+  });
+
+  try {
+    const res = await fetch(`${WORKER}/kv/atribuicoes`, {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ data, atribuicoes })
+    });
+    if (res.ok) {
+      showToast('✅ Atribuições salvas!');
+    } else {
+      const d = await res.json();
+      showToast('Erro: ' + esc(d.error || 'desconhecido'));
+    }
+  } catch { showToast('❌ Sem conexão'); }
+  finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Salvar atribuições';
+  }
+}
+
+document.getElementById('date-atrib').addEventListener('change', loadAtribuicoes);
+
+// ── ABA: STATUS ───────────────────────────────────────────────────────────
+
+async function loadStatus() {
+  const data = document.getElementById('date-status').value || todayISO();
+  if (Object.keys(statusData).length === 0) {
+    document.getElementById('status-content').innerHTML = '<div class="loading">Carregando status...</div>';
+  }
+  try {
+    const res = await fetch(`${WORKER}/kv/status?data=${data}`, { headers: adminHeaders() });
+    statusData = res.ok ? (await res.json()) : {};
+  } catch { statusData = {}; }
+  renderStatus();
+}
+
+function renderStatus() {
+  const chipsEl   = document.getElementById('status-chips');
+  const contentEl = document.getElementById('status-content');
+  const entries   = Object.entries(statusData);
+
+  const counts = { total: entries.length, pendente: 0, aguardando: 0, aprovada: 0, rejeitada: 0 };
+  entries.forEach(([, v]) => { if (v.status in counts) counts[v.status]++; });
+
+  chipsEl.innerHTML = `
+    <div class="status-chip chip-total">Total <strong>${counts.total}</strong></div>
+    <div class="status-chip chip-pendente">Pendente <strong>${counts.pendente}</strong></div>
+    <div class="status-chip chip-aguardando">Aguardando <strong>${counts.aguardando}</strong></div>
+    <div class="status-chip chip-aprovada">Aprovada <strong>${counts.aprovada}</strong></div>
+    <div class="status-chip chip-rejeitada">Rejeitada <strong>${counts.rejeitada}</strong></div>
+  `;
+
+  if (entries.length === 0) {
+    contentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>Nenhum status registrado para esta data.</div>`;
+    return;
+  }
+
+  contentEl.innerHTML = entries.map(([unit, v]) => {
+    const st    = v.status || 'pendente';
+    const thumb = v.fotoUrl
+      ? `<img class="sc-thumb" src="${esc(v.fotoUrl)}" alt="foto"
+           onclick="openLightbox('${esc(v.fotoUrl)}','Apt ${esc(unit)} — ${esc(v.funcionaria||'')}','${esc(v.timestamp||'')}')">`
+      : '';
+    return `<div class="status-card st-${esc(st)}">
+      <div class="sc-num">${esc(unit)}</div>
+      <div class="sc-info">
+        <div class="sc-func">${esc(v.funcionaria || '—')}</div>
+        <div class="sc-time">${v.timestamp ? fmtTime(v.timestamp) : '—'}</div>
+      </div>
+      <div class="sc-right">
+        <span class="status-badge badge-${esc(st)}">${esc(st)}</span>
+        ${thumb}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('date-status').addEventListener('change', () => {
+  statusData = {};
+  loadStatus();
+});
+
+// ── ABA: SENHAS ───────────────────────────────────────────────────────────
+
+async function loadSenhas() {
+  document.getElementById('senhas-content').innerHTML = '<div class="loading">Carregando senhas...</div>';
+  masterVisible = false;
+  masterCode = '';
+  document.getElementById('master-code-val').textContent = '••••••';
+  document.getElementById('btn-reveal').textContent = 'Revelar';
+
+  try {
+    const res = await fetch(`${WORKER}/kv/senhas?master=1`, { headers: adminHeaders() });
+    if (res.ok) {
+      const d = await res.json();
+      masterCode = d.masterCode || '';
+      delete d.masterCode;
+      senhasData = d;
+    } else {
+      senhasData = {};
+    }
+  } catch { senhasData = {}; }
+
+  renderSenhas();
+}
+
+function toggleMaster() {
+  masterVisible = !masterVisible;
+  document.getElementById('master-code-val').textContent = masterVisible ? (masterCode || '(não configurado)') : '••••••';
+  document.getElementById('btn-reveal').textContent = masterVisible ? 'Ocultar' : 'Revelar';
+}
+
+function renderSenhas() {
+  const el = document.getElementById('senhas-content');
+  const q  = document.getElementById('senha-search').value.toLowerCase().trim();
+
+  const list = UNIDADES_SISTEMA.filter(u =>
+    !q || u.nome.toLowerCase().includes(q) || u.local.toLowerCase().includes(q)
+  );
+
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty-state">Nenhuma unidade encontrada.</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(u => {
+    const d   = senhasData[u.nome];
+    const pwd = d?.senha ?? '';
+    const upd = d?.updatedAt ? fmtDataBR(d.updatedAt.slice(0, 10)) : '';
+    const sid = u.nome.replace(/\s/g, '_');
+    return `<div class="senha-card">
+      <div class="senha-main-row">
+        <div class="senha-unit-info">
+          <div class="senha-unit">${esc(u.nome)}</div>
+          <div class="senha-local">${esc(u.local)}</div>
+        </div>
+        <div class="senha-mid">
+          <div class="senha-val ${pwd ? '' : 'none'}">${pwd ? esc(pwd) : 'não cadastrada'}</div>
+          ${upd ? `<div class="senha-updated">Atualizado ${esc(upd)}</div>` : ''}
+        </div>
+        <button class="btn-edit-senha" onclick="startEditSenha('${esc(sid)}','${esc(u.nome)}','${esc(pwd)}')">Editar</button>
+      </div>
+      <div class="senha-edit-row" id="edit-row-${esc(sid)}">
+        <input class="senha-edit-input" id="edit-inp-${esc(sid)}" value="${esc(pwd)}" placeholder="Nova senha..." autocomplete="off">
+        <button class="btn-save-senha" onclick="saveSenha('${esc(u.nome)}','${esc(sid)}')">✓</button>
+        <button class="btn-cancel-edit" onclick="cancelEditSenha('${esc(sid)}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startEditSenha(sid, unit, pwd) {
+  const row = document.getElementById(`edit-row-${sid}`);
+  const inp = document.getElementById(`edit-inp-${sid}`);
+  row.classList.add('visible');
+  inp.value = pwd;
+  inp.focus();
+  inp.addEventListener('keydown', function h(e) {
+    if (e.key === 'Enter') { saveSenha(unit, sid); inp.removeEventListener('keydown', h); }
+    if (e.key === 'Escape') { cancelEditSenha(sid); inp.removeEventListener('keydown', h); }
+  });
+}
+
+function cancelEditSenha(sid) {
+  document.getElementById(`edit-row-${sid}`)?.classList.remove('visible');
+}
+
+async function saveSenha(unit, sid) {
+  const inp   = document.getElementById(`edit-inp-${sid}`);
+  const senha = inp.value.trim();
+  if (!senha) { showToast('Senha não pode ser vazia'); return; }
+
+  try {
+    const res = await fetch(`${WORKER}/kv/senhas`, {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ unidade: unit, senha })
+    });
+    if (res.ok) {
+      senhasData[unit] = { senha, updatedAt: new Date().toISOString() };
+      showToast(`✅ Apt ${unit} atualizada`);
+      renderSenhas();
+    } else {
+      const d = await res.json();
+      showToast('Erro: ' + esc(d.error || 'desconhecido'));
+    }
+  } catch { showToast('❌ Sem conexão'); }
+}
+
+function openBulkModal() {
+  document.getElementById('bulk-modal').classList.add('open');
+  document.getElementById('bulk-textarea').value = '';
+  setTimeout(() => document.getElementById('bulk-textarea').focus(), 80);
+}
+
+function closeBulkModal() {
+  document.getElementById('bulk-modal').classList.remove('open');
+}
+
+async function saveBulk() {
+  const txt = document.getElementById('bulk-textarea').value.trim();
+  if (!txt) { showToast('Nada para importar'); return; }
+
+  const senhas = {};
+  txt.split('\n').forEach(line => {
+    const m = line.match(/^([^:]+):(.+)$/);
+    if (m) senhas[m[1].trim()] = m[2].trim();
+  });
+
+  if (Object.keys(senhas).length === 0) {
+    showToast('Formato inválido. Use UNIDADE:SENHA por linha.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${WORKER}/kv/senhas/bulk`, {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ senhas })
+    });
+    if (res.ok) {
+      const d = await res.json();
+      showToast(`✅ ${d.count} senha(s) importada(s)`);
+      closeBulkModal();
+      loadSenhas();
+    } else {
+      const d = await res.json();
+      showToast('Erro: ' + esc(d.error || 'desconhecido'));
+    }
+  } catch { showToast('❌ Sem conexão'); }
+}
+
+document.getElementById('bulk-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBulkModal();
+});
+
+// ── ABA: GALERIA ──────────────────────────────────────────────────────────
+
+async function loadGaleria() {
+  const data = document.getElementById('date-galeria').value || todayISO();
+  document.getElementById('galeria-content').innerHTML =
+    '<div class="loading" style="grid-column:1/-1">Carregando fotos...</div>';
+
+  try {
+    const res = await fetch(`${WORKER}/kv/status?data=${data}`, { headers: adminHeaders() });
+    galeriaData = res.ok ? (await res.json()) : {};
+  } catch { galeriaData = {}; }
+
+  const funcs = [...new Set(Object.values(galeriaData).map(v => v.funcionaria).filter(Boolean))].sort();
+  const sel   = document.getElementById('filter-func');
+  const prev  = sel.value;
+  sel.innerHTML = '<option value="">Todas funcionárias</option>' +
+    funcs.map(f => `<option ${f === prev ? 'selected' : ''}>${esc(f)}</option>`).join('');
+
+  renderGaleria();
+}
+
+function renderGaleria() {
+  const el          = document.getElementById('galeria-content');
+  const condoFilter = document.getElementById('filter-condo').value;
+  const funcFilter  = document.getElementById('filter-func').value;
+
+  const entries = Object.entries(galeriaData)
+    .filter(([, v]) => v.fotoUrl)
+    .filter(([unit, v]) => {
+      if (condoFilter) {
+        const info = UNIDADES_SISTEMA.find(u => u.nome === unit);
+        if (!info || info.local !== condoFilter) return false;
+      }
+      return !funcFilter || v.funcionaria === funcFilter;
+    });
+
+  if (entries.length === 0) {
+    el.innerHTML = `<div class="galeria-empty">
+      <div class="galeria-empty-icon">📷</div>
+      Nenhuma foto encontrada para os filtros selecionados.
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = entries.map(([unit, v]) =>
+    `<div class="galeria-item" onclick="openLightbox('${esc(v.fotoUrl)}','Apt ${esc(unit)} — ${esc(v.funcionaria||'')}','${esc(v.timestamp||'')}')">
+      <img class="galeria-img" src="${esc(v.fotoUrl)}" alt="Apt ${esc(unit)}" loading="lazy">
+      <div class="galeria-meta">
+        <div class="galeria-unit">Apt ${esc(unit)}</div>
+        <div class="galeria-func">${esc(v.funcionaria || '—')}</div>
+        <div class="galeria-time">${v.timestamp ? fmtTime(v.timestamp) : ''}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+document.getElementById('date-galeria').addEventListener('change', loadGaleria);
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────
+
+function openLightbox(url, caption, timestamp) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-info').textContent =
+    caption + (timestamp ? ' · ' + fmtTime(timestamp) : '');
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeLightbox();
+    closeBulkModal();
+  }
+});
+</script>
+</body>
+</html>
