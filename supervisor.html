@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lyrios — Supervisor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef2f7; --card: #ffffff;
+      --green: #22c55e; --green-dark: #16a34a;
+      --red: #ef4444; --red-dark: #dc2626;
+      --blue: #3b82f6; --blue-dark: #2563eb;
+      --yellow: #f59e0b; --yellow-dark: #d97706;
+      --navy: #0f2744; --navy-mid: #1e3a5f;
+      --text: #1a2740; --text-muted: #64748b;
+      --border: #dde3ed;
+      --shadow: 0 2px 8px rgba(15,39,68,0.08), 0 1px 3px rgba(15,39,68,0.05);
+      --shadow-md: 0 6px 16px rgba(15,39,68,0.10), 0 2px 6px rgba(15,39,68,0.06);
+      --radius: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* ── LOGIN ── */
+    #screen-login {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #0f2744 0%, #1e3a5f 55%, #1a4570 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px max(32px, env(safe-area-inset-bottom));
+    }
+    #screen-login.hidden { display: none; }
+    .login-logo { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .login-logo span { color: var(--green); }
+    .login-role { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 36px; }
+    .login-card { background: #fff; border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+    .login-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+    .login-select, .login-input {
+      width: 100%; height: 52px; border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: inherit; font-size: 16px; color: var(--text); padding: 0 14px;
+      background: var(--bg); margin-bottom: 18px; -webkit-appearance: none; appearance: none;
+      outline: none; transition: border-color 0.15s;
+    }
+    .login-select:focus, .login-input:focus { border-color: var(--blue); background: #fff; }
+    .login-input { letter-spacing: 6px; font-weight: 700; font-size: 20px; text-align: center; }
+    .btn-login {
+      width: 100%; height: 56px;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: #fff; border: none; border-radius: 16px; font-family: inherit; font-size: 18px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.4); transition: transform 0.12s, box-shadow 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-login:active { transform: scale(0.97); }
+    .btn-login:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+    #login-erro { margin-top: 14px; padding: 10px 14px; background: #fee2e2; border-radius: 10px; color: var(--red-dark); font-size: 14px; font-weight: 600; text-align: center; }
+
+    /* ── MAIN ── */
+    #screen-main { display: none; min-height: 100vh; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+    #screen-main.visible { display: block; }
+
+    .header {
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 60%, #1a4570 100%);
+      color: #fff; padding: 16px 20px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(15,39,68,0.35);
+    }
+    .header-row { display: flex; align-items: center; justify-content: space-between; }
+    .header-logo { font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
+    .header-logo span { color: var(--green); }
+    .header-role { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+    .header-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+
+    /* date picker row */
+    .date-row {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 12px 20px; background: var(--card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 68px; z-index: 90;
+    }
+    .date-btn {
+      width: 36px; height: 36px; border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; transition: background 0.12s;
+    }
+    .date-btn:active { background: var(--border); }
+    #lbl-data { font-size: 15px; font-weight: 800; color: var(--text); min-width: 160px; text-align: center; }
+
+    /* stats bar */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+      padding: 12px 16px;
+    }
+    .stat-chip {
+      background: var(--card); border-radius: 12px; padding: 10px 8px;
+      text-align: center; box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+    .stat-num  { font-size: 20px; font-weight: 900; line-height: 1; }
+    .stat-lbl  { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+    .stat-chip.aguardando .stat-num { color: var(--yellow-dark); }
+    .stat-chip.aprovada   .stat-num { color: var(--green-dark); }
+    .stat-chip.rejeitada  .stat-num { color: var(--red); }
+    .stat-chip.pendente   .stat-num { color: var(--text-muted); }
+
+    /* tabs */
+    .tabs { display: flex; border-bottom: 2px solid var(--border); background: var(--card); padding: 0 16px; }
+    .tab {
+      padding: 12px 16px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; background: none;
+      font-family: inherit; color: var(--text-muted); border-bottom: 3px solid transparent;
+      margin-bottom: -2px; -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tab.active { color: var(--blue-dark); border-bottom-color: var(--blue-dark); }
+    .tab-badge {
+      background: var(--yellow-dark); color: #fff; font-size: 11px; font-weight: 800;
+      border-radius: 999px; padding: 1px 7px; min-width: 20px; text-align: center;
+    }
+    .tab-badge.zero { background: var(--border); color: var(--text-muted); }
+
+    .main-content { padding: 12px 16px; }
+
+    /* ── UNIT CARD ── */
+    .unit-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.7); border-left-width: 4px;
+      border-left-color: var(--border); overflow: hidden;
+    }
+    .unit-card.status-aguardando { border-left-color: var(--yellow-dark); }
+    .unit-card.status-aprovada   { border-left-color: var(--green); }
+    .unit-card.status-rejeitada  { border-left-color: var(--red); }
+    .unit-card.status-pendente   { border-left-color: var(--border); }
+
+    .unit-card-top { display: flex; gap: 12px; padding: 14px 14px 10px; }
+    .unit-foto-wrap {
+      width: 72px; height: 72px; flex-shrink: 0; border-radius: 10px; overflow: hidden;
+      background: var(--bg); cursor: pointer; position: relative;
+    }
+    .unit-foto { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .unit-foto-placeholder {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--text-muted);
+    }
+    .unit-info { flex: 1; min-width: 0; }
+    .unit-num  { font-size: 22px; font-weight: 900; color: var(--text); line-height: 1; }
+    .unit-func { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-top: 3px; }
+    .unit-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .unit-nao-atrib { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin-top: 5px;
+    }
+    .badge-aguardando { background: #fff7ed; color: #c2410c; }
+    .badge-aprovada   { background: #dcfce7; color: #15803d; }
+    .badge-rejeitada  { background: #fee2e2; color: var(--red-dark); }
+    .badge-pendente   { background: #f1f5f9; color: var(--text-muted); }
+
+    .unit-card-actions { display: flex; gap: 8px; padding: 0 14px 14px; }
+    .btn-aprovar, .btn-rejeitar {
+      flex: 1; height: 48px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      -webkit-tap-highlight-color: transparent; transition: transform 0.12s;
+    }
+    .btn-aprovar:active, .btn-rejeitar:active { transform: scale(0.96); }
+    .btn-aprovar {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      color: #fff; box-shadow: 0 3px 10px rgba(22,163,74,0.3);
+    }
+    .btn-rejeitar {
+      background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+      color: #fff; box-shadow: 0 3px 10px rgba(239,68,68,0.3);
+    }
+    .btn-aprovar:disabled, .btn-rejeitar:disabled {
+      opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
+    }
+
+    .notion-erro {
+      margin: 0 14px 12px; padding: 8px 12px; background: #fff7ed; border-radius: 8px;
+      font-size: 12px; color: #92400e; font-weight: 600;
+    }
+
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state-text { font-size: 15px; font-weight: 600; }
+    .empty-state-sub  { font-size: 13px; margin-top: 6px; }
+
+    /* ── SHEETS ── */
+    .sheet-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 200;
+      display: none; align-items: flex-end; backdrop-filter: blur(2px);
+    }
+    .sheet-overlay.open { display: flex; }
+    .sheet {
+      background: var(--card); border-radius: 26px 26px 0 0; width: 100%;
+      padding: 22px 20px max(24px, env(safe-area-inset-bottom));
+      max-height: 92vh; overflow-y: auto;
+    }
+    .sheet-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto 20px; }
+    .sheet-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .sheet-sub   { font-size: 14px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+
+    .sheet-textarea {
+      width: 100%; min-height: 100px; border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: inherit; font-size: 16px; color: var(--text); padding: 12px 14px;
+      background: var(--bg); outline: none; resize: vertical; margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .sheet-textarea:focus { border-color: var(--red); background: #fff; }
+
+    .btn-sheet-rejeitar {
+      width: 100%; height: 56px;
+      background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+      color: #fff; border: none; border-radius: 16px;
+      font-family: inherit; font-size: 18px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+      -webkit-tap-highlight-color: transparent; transition: transform 0.12s;
+    }
+    .btn-sheet-rejeitar:active { transform: scale(0.97); }
+    .btn-sheet-rejeitar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-sheet-cancel {
+      width: 100%; height: 48px; background: none; border: none;
+      font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; margin-top: 8px; -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── LIGHTBOX ── */
+    #lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 400;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+    #lightbox-close {
+      position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px;
+      width: 40px; height: 40px; background: rgba(255,255,255,0.15); border: none; border-radius: 20px;
+      color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* spinner inline */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-sm {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block;
+    }
+
+    /* toast */
+    #toast {
+      position: fixed; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: #1e293b; color: #fff; font-size: 14px; font-weight: 600;
+      padding: 12px 20px; border-radius: 12px; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(15,39,68,0.35); z-index: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.erro { background: var(--red-dark); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div id="screen-login">
+  <div class="login-logo">Lyrios<span>.</span></div>
+  <div class="login-role">Supervisor</div>
+  <div class="login-card">
+    <label class="login-label" for="sel-nome">Seu nome</label>
+    <select id="sel-nome" class="login-select">
+      <option value="">— selecione —</option>
+      <option>Mireyda</option>
+      <option>Inosencia</option>
+      <option>Rosita</option>
+      <option>Maria Eugenia</option>
+      <option>Francisca</option>
+      <option>Ana</option>
+      <option>Lany Franca</option>
+      <option>Jaime</option>
+      <option>Darwin</option>
+      <option>Juan</option>
+    </select>
+    <label class="login-label" for="inp-pin">PIN</label>
+    <input id="inp-pin" class="login-input" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <button id="btn-login" class="btn-login">Entrar</button>
+    <div id="login-erro" hidden></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div id="screen-main">
+  <div class="header">
+    <div class="header-row">
+      <div class="header-logo">Lyrios<span>.</span></div>
+      <div class="header-role">Supervisor</div>
+    </div>
+    <div class="header-sub" id="header-sub">—</div>
+  </div>
+
+  <!-- date nav -->
+  <div class="date-row">
+    <button class="date-btn" id="btn-dia-ant" title="Dia anterior">‹</button>
+    <div id="lbl-data">—</div>
+    <button class="date-btn" id="btn-dia-prox" title="Dia seguinte">›</button>
+  </div>
+
+  <!-- stats -->
+  <div class="stats-bar">
+    <div class="stat-chip aguardando"><div class="stat-num" id="cnt-aguardando">0</div><div class="stat-lbl">Aguardando</div></div>
+    <div class="stat-chip aprovada">  <div class="stat-num" id="cnt-aprovada">0</div>  <div class="stat-lbl">Aprovadas</div></div>
+    <div class="stat-chip rejeitada"> <div class="stat-num" id="cnt-rejeitada">0</div> <div class="stat-lbl">Rejeitadas</div></div>
+    <div class="stat-chip pendente">  <div class="stat-num" id="cnt-pendente">0</div>  <div class="stat-lbl">Pendentes</div></div>
+  </div>
+
+  <!-- tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="aguardando">
+      Aguardando <span class="tab-badge zero" id="badge-tab">0</span>
+    </button>
+    <button class="tab" data-tab="todas">Todas</button>
+  </div>
+
+  <div class="main-content" id="main-content">
+    <div class="empty-state">
+      <div class="empty-state-icon">🔄</div>
+      <div class="empty-state-text">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SHEET: REJEIÇÃO ═══════════════ -->
+<div class="sheet-overlay" id="sheet-rejeicao">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Rejeitar unidade</div>
+    <div class="sheet-sub" id="sheet-rej-sub">Informe o motivo para a funcionária corrigir.</div>
+    <textarea id="inp-comentario" class="sheet-textarea" placeholder="Ex: Faltou limpar o banheiro, cama não foi feita..."></textarea>
+    <button class="btn-sheet-rejeitar" id="btn-confirmar-rejeicao">✗ Confirmar rejeição</button>
+    <button class="btn-sheet-cancel" id="btn-cancelar-rejeicao">Cancelar</button>
+  </div>
+</div>
+
+<!-- toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════ LIGHTBOX ═══════════════ -->
+<div id="lightbox">
+  <button id="lightbox-close">✕</button>
+  <img id="lightbox-img" src="" alt="Foto da unidade">
+</div>
+
+<script>
+const WORKER   = 'https://lyrios-cleaning-worker.mariopimentel1610.workers.dev';
+const NOTION_DB = '0dc0408e502942e6b36a6b9b3960558d'; // migrar para env var NOTION_DB_ID no worker futuramente
+
+const NOMES_DISPLAY = {
+  'mireyda': 'Mireyda', 'inosencia': 'Inosencia', 'rosita': 'Rosita',
+  'maria eugenia': 'Maria Eugenia', 'francisca': 'Francisca',
+  'ana': 'Ana', 'lany franca': 'Lany Franca',
+  'jaime': 'Jaime', 'darwin': 'Darwin', 'juan': 'Juan',
+};
+function nomePadrao(raw) { return NOMES_DISPLAY[(raw || '').toLowerCase()] || raw || ''; }
+
+const UNIT_VALUES = {
+  '121':30,'210':30,'627':30,'320':30,'744':30,'721':30,'713':30,'508':30,
+  '325':35,'622':35,'2102':35,'22':35
+};
+const DEFAULT_UNIT_VALUE = 15;
+
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_PT  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+let sess         = null;
+let dataAtiva    = todayISO();
+let tabAtiva     = 'aguardando';
+let statusCache  = {};
+let atribCache   = {};
+let todasUnidades = [];
+let pollingTimer  = null;
+let unidadeRejeitar = null; // { unidade, funcionaria }
+
+// ── boot ──────────────────────────────────────────────────────────────────────
+
+(function boot() {
+  const raw = sessionStorage.getItem('lf_session');
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      const diaAuth = parsed.autenticadaEm
+        ? parsed.autenticadaEm.slice(0, 10)
+        : null;
+      if (diaAuth === todayISO()) {
+        sess = parsed;
+      } else {
+        sessionStorage.removeItem('lf_session');
+      }
+    } catch { /* sess permanece null */ }
+  }
+  if (sess) { mostrarMain(); carregarDia(); }
+  else { document.getElementById('screen-login').classList.remove('hidden'); }
+})();
+
+// ── login ─────────────────────────────────────────────────────────────────────
+
+document.getElementById('btn-login').addEventListener('click', fazerLogin);
+document.getElementById('inp-pin').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+async function fazerLogin() {
+  const nome = document.getElementById('sel-nome').value;
+  const pin  = document.getElementById('inp-pin').value.trim();
+  const btn  = document.getElementById('btn-login');
+
+  document.getElementById('login-erro').hidden = true;
+  if (!nome) { mostrarErroLogin('Selecione seu nome'); return; }
+  if (pin.length !== 4) { mostrarErroLogin('PIN deve ter 4 dígitos'); return; }
+
+  btn.disabled = true; btn.innerHTML = '<div class="spinner-sm"></div>';
+  try {
+    const res  = await fetch(`${WORKER}/auth/pin`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, pin, role: 'supervisor' })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarErroLogin(data.error || 'PIN incorreto'); return; }
+    sess = { nome: data.nome, role: data.role, autenticadaEm: data.autenticadaEm };
+    sessionStorage.setItem('lf_session', JSON.stringify(sess));
+    document.getElementById('screen-login').classList.add('hidden');
+    mostrarMain();
+    carregarDia();
+  } catch { mostrarErroLogin('Sem conexão com o servidor'); }
+  finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+
+function mostrarErroLogin(msg) {
+  const el = document.getElementById('login-erro');
+  el.textContent = msg; el.hidden = false;
+}
+
+function mostrarMain() {
+  document.getElementById('screen-main').classList.add('visible');
+  document.getElementById('header-sub').textContent = sess?.nome || '';
+}
+
+// ── navegação de data ─────────────────────────────────────────────────────────
+
+document.getElementById('btn-dia-ant').addEventListener('click', () => mudarDia(-1));
+document.getElementById('btn-dia-prox').addEventListener('click', () => mudarDia(1));
+
+function mudarDia(delta) {
+  const [y,m,d] = dataAtiva.split('-').map(Number);
+  const dt = new Date(y, m-1, d + delta);
+  dataAtiva = isoDeDate(dt);
+  carregarDia();
+}
+
+function atualizarLblData() {
+  const [y,m,d] = dataAtiva.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  document.getElementById('lbl-data').textContent =
+    `${DIAS_PT[dt.getDay()]}, ${d} de ${MESES_PT[m-1]}`;
+  const hoje = todayISO();
+  document.getElementById('btn-dia-prox').disabled = dataAtiva >= hoje;
+}
+
+// ── carregar dia ──────────────────────────────────────────────────────────────
+
+async function carregarDia() {
+  clearInterval(pollingTimer);
+  atualizarLblData();
+  document.getElementById('main-content').innerHTML =
+    '<div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-text">Carregando...</div></div>';
+
+  try {
+    const [atribRes, statusRes] = await Promise.all([
+      fetch(`${WORKER}/kv/atribuicoes?data=${dataAtiva}`),
+      fetch(`${WORKER}/kv/status?data=${dataAtiva}`)
+    ]);
+    atribCache  = atribRes.ok  ? await atribRes.json()  : {};
+    statusCache = statusRes.ok ? await statusRes.json() : {};
+
+    todasUnidades = calcTodasUnidades(atribCache, statusCache);
+    renderTudo();
+  } catch {
+    document.getElementById('main-content').innerHTML =
+      '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Erro ao carregar</div><div class="empty-state-sub">Verifique sua conexão</div></div>';
+  }
+
+  pollingTimer = setInterval(pollStatus, 30_000);
+}
+
+async function pollStatus() {
+  try {
+    const res = await fetch(`${WORKER}/kv/status?data=${dataAtiva}`);
+    if (!res.ok) return;
+    statusCache = await res.json();
+    renderTudo();
+  } catch { /* silencioso */ }
+}
+
+// ── calcular lista de unidades ────────────────────────────────────────────────
+
+function calcTodasUnidades(atrib, status) {
+  const set = new Set();
+  Object.values(atrib).forEach(list => list.forEach(u => set.add(String(u))));
+  Object.keys(status).forEach(u => set.add(u));
+  return [...set].sort((a, b) => isNaN(a) || isNaN(b) ? a.localeCompare(b) : Number(a) - Number(b));
+}
+
+// ── render ────────────────────────────────────────────────────────────────────
+
+function renderTudo() {
+  // stats
+  let cnts = { aguardando: 0, aprovada: 0, rejeitada: 0, pendente: 0 };
+  todasUnidades.forEach(u => {
+    const s = statusCache[u]?.status || 'pendente';
+    cnts[s] = (cnts[s] || 0) + 1;
+  });
+  document.getElementById('cnt-aguardando').textContent = cnts.aguardando;
+  document.getElementById('cnt-aprovada').textContent   = cnts.aprovada;
+  document.getElementById('cnt-rejeitada').textContent  = cnts.rejeitada;
+  document.getElementById('cnt-pendente').textContent   = cnts.pendente;
+
+  const badge = document.getElementById('badge-tab');
+  badge.textContent = cnts.aguardando;
+  badge.className = 'tab-badge' + (cnts.aguardando === 0 ? ' zero' : '');
+
+  // cards
+  const content = document.getElementById('main-content');
+  content.innerHTML = '';
+
+  const filtradas = tabAtiva === 'aguardando'
+    ? todasUnidades.filter(u => (statusCache[u]?.status || 'pendente') === 'aguardando')
+    : todasUnidades;
+
+  if (!filtradas.length) {
+    const msg = tabAtiva === 'aguardando'
+      ? { icon: '✅', text: 'Tudo revisado!', sub: 'Nenhuma unidade aguardando aprovação.' }
+      : { icon: '📋', text: 'Sem unidades hoje', sub: 'Nenhuma atribuição registrada para este dia.' };
+    content.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${msg.icon}</div><div class="empty-state-text">${msg.text}</div><div class="empty-state-sub">${msg.sub}</div></div>`;
+    return;
+  }
+
+  filtradas.forEach(u => content.appendChild(criarCard(u, statusCache[u])));
+}
+
+function criarCard(unidade, st) {
+  const status   = st?.status || 'pendente';
+  const card     = document.createElement('div');
+  card.className = `unit-card status-${status}`;
+  card.dataset.unidade = unidade;
+
+  const fotoHtml = st?.fotoUrl
+    ? `<img class="unit-foto" src="${escHtml(st.fotoUrl)}" alt="Foto unidade ${escHtml(unidade)}" loading="lazy">`
+    : `<div class="unit-foto-placeholder">🏠</div>`;
+
+  const hora = st?.timestamp ? fmtHora(st.timestamp) : '';
+  const naoAtrib = st?.naoAtribuida ? '<div class="unit-nao-atrib">Não estava na lista</div>' : '';
+
+  const badgeMap = {
+    aguardando: '<span class="badge badge-aguardando">🕐 Aguardando</span>',
+    aprovada:   '<span class="badge badge-aprovada">✓ Aprovada</span>',
+    rejeitada:  '<span class="badge badge-rejeitada">✗ Rejeitada</span>',
+    pendente:   '<span class="badge badge-pendente">⏳ Pendente</span>',
+  };
+
+  let actionsHtml = '';
+  if (status === 'aguardando') {
+    actionsHtml = `
+      <div class="unit-card-actions">
+        <button class="btn-aprovar" data-unidade="${escHtml(unidade)}">✓ Aprovar</button>
+        <button class="btn-rejeitar" data-unidade="${escHtml(unidade)}">✗ Rejeitar</button>
+      </div>`;
+  }
+
+  card.innerHTML = `
+    <div class="unit-card-top">
+      <div class="unit-foto-wrap" data-foto="${escHtml(st?.fotoUrl || '')}">${fotoHtml}</div>
+      <div class="unit-info">
+        <div class="unit-num">${escHtml(unidade)}</div>
+        ${st?.funcionaria ? `<div class="unit-func">👤 ${escHtml(st.funcionaria)}</div>` : ''}
+        ${hora ? `<div class="unit-time">🕐 ${hora}</div>` : ''}
+        ${naoAtrib}
+        ${badgeMap[status] || ''}
+      </div>
+    </div>
+    ${actionsHtml}
+  `;
+
+  // foto clicável
+  card.querySelector('.unit-foto-wrap').addEventListener('click', () => {
+    const url = st?.fotoUrl;
+    if (url) abrirLightbox(url);
+  });
+
+  // botões
+  const btnApr = card.querySelector('.btn-aprovar');
+  const btnRej = card.querySelector('.btn-rejeitar');
+  if (btnApr) btnApr.addEventListener('click', () => aprovar(unidade, card));
+  if (btnRej) btnRej.addEventListener('click', () => abrirSheetRejeicao(unidade, st?.funcionaria || ''));
+
+  return card;
+}
+
+// ── aprovar ───────────────────────────────────────────────────────────────────
+
+async function aprovar(unidade, card) {
+  const btnApr = card.querySelector('.btn-aprovar');
+  const btnRej = card.querySelector('.btn-rejeitar');
+  if (!btnApr) return;
+  btnApr.disabled = true; btnRej.disabled = true;
+  btnApr.innerHTML = '<div class="spinner-sm"></div>';
+
+  const st = statusCache[unidade];
+
+  try {
+    // 1. atualizar KV
+    await fetch(`${WORKER}/kv/status`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: dataAtiva, unidade, status: 'aprovada',
+        funcionaria: st?.funcionaria || '',
+        fotoUrl: st?.fotoUrl || null,
+        lat: st?.lat || null, lng: st?.lng || null,
+        timestamp: st?.timestamp || null,
+        ...(st?.naoAtribuida && { naoAtribuida: true })
+      })
+    });
+
+    // 2. gravar no Notion
+    const notionErro = await criarPaginaNotion(unidade, st);
+    statusCache[unidade] = { ...(st || {}), status: 'aprovada' };
+    renderTudo();
+
+    if (notionErro) {
+      // não bloqueia — mostra aviso discreto
+      const cardAtualizado = document.querySelector(`.unit-card[data-unidade="${unidade}"]`);
+      if (cardAtualizado) {
+        const aviso = document.createElement('div');
+        aviso.className = 'notion-erro';
+        aviso.textContent = '⚠️ Aprovado, mas falha ao gravar no Notion: ' + notionErro;
+        cardAtualizado.appendChild(aviso);
+      }
+    }
+  } catch (e) {
+    btnApr.disabled = false; btnRej.disabled = false;
+    btnApr.textContent = '✓ Aprovar';
+    showToast('Erro ao aprovar: ' + (e.message || 'tente novamente'), 'erro');
+  }
+}
+
+async function criarPaginaNotion(unidade, st) {
+  const valor = UNIT_VALUES[unidade] ?? DEFAULT_UNIT_VALUE;
+  const props = {
+    'Funcionária': { select: { name: nomePadrao(st?.funcionaria) } },
+    'Valor Unit.':  { number: valor },
+    'Data':         { date: { start: dataAtiva } },
+    'Pago?':        { checkbox: false },
+    'Unidade':      { rich_text: [{ text: { content: String(unidade) } }] },
+    'Status':       { select: { name: 'Aprovada' } },
+  };
+  if (st?.fotoUrl) props['URL da Foto'] = { url: st.fotoUrl };
+
+  try {
+    const res = await fetch(`${WORKER}/v1/pages`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent: { database_id: NOTION_DB }, properties: props })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      // retry sem campos novos se Notion rejeitar (campos não existem no DB ainda)
+      if (res.status === 400) return await criarPaginaNotionBasico(unidade, st, valor);
+      return err.message || `HTTP ${res.status}`;
+    }
+    return null; // sucesso
+  } catch (e) {
+    return e.message;
+  }
+}
+
+async function criarPaginaNotionBasico(unidade, st, valor) {
+  const props = {
+    'Funcionária': { select: { name: nomePadrao(st?.funcionaria) } },
+    'Valor Unit.':  { number: valor },
+    'Data':         { date: { start: dataAtiva } },
+    'Pago?':        { checkbox: false },
+  };
+  try {
+    const res = await fetch(`${WORKER}/v1/pages`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent: { database_id: NOTION_DB }, properties: props })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return err.message || `HTTP ${res.status}`;
+    }
+    return null;
+  } catch (e) { return e.message; }
+}
+
+// ── rejeitar ──────────────────────────────────────────────────────────────────
+
+function abrirSheetRejeicao(unidade, funcionaria) {
+  unidadeRejeitar = { unidade, funcionaria };
+  document.getElementById('sheet-rej-sub').textContent =
+    `Unidade ${unidade}${funcionaria ? ' · ' + funcionaria : ''}. Informe o motivo para a funcionária corrigir.`;
+  document.getElementById('inp-comentario').value = '';
+  document.getElementById('btn-confirmar-rejeicao').disabled = false;
+  document.getElementById('btn-confirmar-rejeicao').textContent = '✗ Confirmar rejeição';
+  abrirSheet('sheet-rejeicao');
+}
+
+document.getElementById('btn-confirmar-rejeicao').addEventListener('click', confirmarRejeicao);
+document.getElementById('btn-cancelar-rejeicao').addEventListener('click', () => fecharSheet('sheet-rejeicao'));
+document.getElementById('sheet-rejeicao').addEventListener('click', e => {
+  if (e.target === document.getElementById('sheet-rejeicao')) fecharSheet('sheet-rejeicao');
+});
+
+async function confirmarRejeicao() {
+  if (!unidadeRejeitar) return;
+  const comentario = document.getElementById('inp-comentario').value.trim();
+  const btn = document.getElementById('btn-confirmar-rejeicao');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner-sm"></div>';
+
+  const { unidade, funcionaria } = unidadeRejeitar;
+  const st = statusCache[unidade];
+
+  try {
+    await fetch(`${WORKER}/kv/status`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: dataAtiva, unidade, status: 'rejeitada',
+        funcionaria: funcionaria || st?.funcionaria || '',
+        fotoUrl: st?.fotoUrl || null,
+        comentario: comentario || null,
+        lat: st?.lat || null, lng: st?.lng || null,
+        timestamp: st?.timestamp || null,
+      })
+    });
+    statusCache[unidade] = { ...(st || {}), status: 'rejeitada', comentario };
+    fecharSheet('sheet-rejeicao');
+    unidadeRejeitar = null;
+    renderTudo();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '✗ Confirmar rejeição';
+    showToast('Erro ao rejeitar: ' + (e.message || 'tente novamente'), 'erro');
+  }
+}
+
+// ── tabs ──────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  tabAtiva = t.dataset.tab;
+  renderTudo();
+}));
+
+// ── lightbox ──────────────────────────────────────────────────────────────────
+
+function abrirLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+document.getElementById('lightbox-close').addEventListener('click', fecharLightbox);
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) fecharLightbox();
+});
+function fecharLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function abrirSheet(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function fecharSheet(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isoDeDate(dt) {
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+function fmtHora(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch { return ''; }
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer = null;
+function showToast(msg, tipo = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = tipo === 'erro' ? 'erro' : '';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

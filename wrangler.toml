@@ -1,0 +1,43 @@
+# =============================================================================
+# Cloudflare Worker — lyrios-cleaning-worker
+# =============================================================================
+#
+# PASSOS PÓS-DEPLOY (fazer na ordem):
+#
+#   1. BUCKET R2
+#      No dashboard Cloudflare → R2 → Create bucket → nome: lyrios-fotos
+#      (o nome deve ser idêntico ao campo bucket_name abaixo)
+#
+#   2. KV NAMESPACE
+#      No dashboard Cloudflare → Workers & Pages → KV → Create namespace → nome: lyrios-kv
+#      Copie o ID gerado e substitua o placeholder em [[kv_namespaces]] abaixo.
+#      Depois rode: wrangler deploy (para aplicar o binding correto)
+#
+#   3. SECRETS (nunca colocar em texto plano neste arquivo)
+#      wrangler secret put NOTION_TOKEN      → cole o token "secret_xxxx" da integração Notion
+#      wrangler secret put R2_PUBLIC_URL     → cole a URL pública do bucket (ex: https://pub.r2.dev/lyrios-fotos)
+#      wrangler secret put MASTER_CODE       → código master exibido a supervisor/admin em GET /kv/senhas?master=1
+#      wrangler secret put PINS             → JSON: {"mireyda":"1234","inosencia":"5678",...} (PINs de cada funcionária)
+#
+# =============================================================================
+
+name               = "lyrios-cleaning-worker"
+main               = "worker.js"
+compatibility_date = "2026-04-29"
+
+# --- Variáveis públicas ---
+# NOTION_TOKEN, R2_PUBLIC_URL e MASTER_CODE NÃO devem entrar aqui.
+# Adicione-os como secrets via: wrangler secret put <NOME>
+# ou pelo dashboard em Workers > Settings > Variables > Encrypt.
+[vars]
+NOTION_VERSION = "2022-06-28"
+
+# --- Binding R2 ---
+[[r2_buckets]]
+binding     = "FOTOS"
+bucket_name = "lf-fotos"
+
+# --- Binding KV ---
+[[kv_namespaces]]
+binding = "KV"
+id      = "11f260f6eea74af3a91443ed5efe3c8d"
