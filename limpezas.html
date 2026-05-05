@@ -302,15 +302,15 @@
     .history-day-body { display: none; padding: 0 14px 12px; border-top: 1px solid var(--border); }
     .history-day.open .history-day-body { display: block; }
     .history-row {
-      display: flex; align-items: center; gap: 10px; padding: 9px 0;
+      display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;
       border-bottom: 1px solid var(--border);
     }
     .history-row:last-child { border-bottom: none; }
-    .history-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .history-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
     .history-row-info { flex: 1; min-width: 0; }
-    .history-row-name { font-weight: 800; font-size: 17px; }
-    .history-row-unit { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-    .history-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .history-row-name { font-weight: 800; font-size: 17px; line-height: 1.1; }
+    .history-row-unit { font-size: 11px; color: var(--text-muted); margin-top: 0; line-height: 1.2; }
+    .history-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
     .history-row-val { font-weight: 700; color: var(--green-dark); font-size: 14px; }
     .history-loading { text-align: center; color: var(--text-muted); padding: 20px; font-size: 13px; }
     .history-empty { text-align: center; color: var(--text-muted); padding: 16px; font-size: 13px; }
