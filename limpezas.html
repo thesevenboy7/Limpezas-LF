@@ -1986,7 +1986,7 @@ async function loadHistory() {
       }).join('');
 
       return `
-        <div class="history-day" id="hday_${ds}">
+        <div class="history-day open" id="hday_${ds}">
           <div class="history-day-header" onclick="toggleHistoryDay('${ds}')">
             <div class="history-day-date">${label}</div>
             <div class="history-day-meta">${items.length} registro${items.length!==1?'s':''}${pendHtml}</div>
