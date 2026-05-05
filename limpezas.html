@@ -316,6 +316,21 @@
     .history-empty { text-align: center; color: var(--text-muted); padding: 16px; font-size: 13px; }
     .pending-badge { color: #dc2626; font-size: 11px; font-weight: 700; }
 
+    /* ── POR FUNCIONÁRIA ── */
+    .empday-card { background: var(--card); border-radius: 14px; border-left: 4px solid #94a3b8; margin-bottom: 8px; box-shadow: var(--shadow); overflow: hidden; }
+    .empday-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .empday-nome { font-size: 14px; font-weight: 800; color: var(--text); flex: 1; }
+    .empday-meta { font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+    .empday-chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .empday-card.open .empday-chevron { transform: rotate(180deg); }
+    .empday-body { display: none; padding: 4px 14px 10px; border-top: 1px solid var(--border); }
+    .empday-card.open .empday-body { display: block; }
+    .empday-row { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .empday-row:last-child { border-bottom: none; }
+    .empday-date { font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 80px; flex-shrink: 0; }
+    .empday-units { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+    .empday-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
     /* ── PAYMENT BUTTON ── */
     .pago-btn {
       border: none; border-radius: 999px; font-size: 13px; font-weight: 700;
@@ -1997,7 +2012,45 @@ async function loadHistory() {
         </div>`;
     }).join('');
 
+    // ── Por Funcionária ──────────────────────────────────────
+    const byEmpDay = {};
+    for (const i of allHistoryItems) {
+      if (!byEmpDay[i.funcionaria]) byEmpDay[i.funcionaria] = {};
+      if (!byEmpDay[i.funcionaria][i.data]) byEmpDay[i.funcionaria][i.data] = [];
+      if (i.unidade) byEmpDay[i.funcionaria][i.data].push(i.unidade);
+      else byEmpDay[i.funcionaria][i.data].push('—');
+    }
+    const empDayHtml = Object.entries(byEmpDay)
+      .filter(([n]) => { const c=FUNCIONARIOS[n]; return !c || c.tipo==='limpeza'; })
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([nome, diasMap]) => {
+        const cor = EMP_COLORS[nome] || '#94a3b8';
+        const totalLimp = Object.values(diasMap).reduce((s,u) => s+u.length, 0);
+        const diasHtml = Object.entries(diasMap)
+          .sort(([a],[b]) => b.localeCompare(a))
+          .map(([ds, unids]) => {
+            const [y,m,d] = ds.split('-').map(Number);
+            const dt = new Date(y,m-1,d);
+            const label = `${DIAS_PT[dt.getDay()]} ${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}`;
+            return `<div class="empday-row">
+              <span class="empday-date">${label}</span>
+              <span class="empday-units">${unids.join(', ')}</span>
+              <span class="empday-count">${unids.length} unid.</span>
+            </div>`;
+          }).join('');
+        return `<div class="empday-card" style="border-left-color:${cor}">
+          <div class="empday-header" onclick="this.parentElement.classList.toggle('open')">
+            <div class="empday-nome">${nome}</div>
+            <div class="empday-meta">${totalLimp} limpeza${totalLimp!==1?'s':''}</div>
+            <div class="empday-chevron">▾</div>
+          </div>
+          <div class="empday-body">${diasHtml}</div>
+        </div>`;
+      }).join('');
+
     content.innerHTML = payHtml
+      + `<div class="section-label" style="margin-bottom:8px;margin-top:14px">Por funcionária</div>`
+      + empDayHtml
       + `<div class="section-label" style="margin-bottom:8px;margin-top:14px">Por dia</div>`
       + daysHtml;
 
