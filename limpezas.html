@@ -308,7 +308,7 @@
     .history-row:last-child { border-bottom: none; }
     .history-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .history-row-info { flex: 1; min-width: 0; }
-    .history-row-name { font-weight: 700; font-size: 13px; }
+    .history-row-name { font-weight: 800; font-size: 17px; }
     .history-row-unit { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
     .history-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
     .history-row-val { font-weight: 700; color: var(--green-dark); font-size: 14px; }
@@ -330,6 +330,13 @@
     .empday-date { font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 80px; flex-shrink: 0; }
     .empday-units { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
     .empday-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+    .empday-day-group { padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .empday-day-group:last-child { border-bottom: none; }
+    .empday-day-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+    .empday-unit-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
+    .empday-unit-num { font-size: 17px; font-weight: 800; color: var(--text); }
+    .empday-unit-val { font-size: 13px; font-weight: 600; color: var(--green-dark); }
+    .empday-day-total { display: flex; justify-content: space-between; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
 
     /* ── PAYMENT BUTTON ── */
     .pago-btn {
@@ -1359,7 +1366,7 @@ async function fetchHojeDoNotion(dateISO) {
           id:          pg.id,
           notionId:    pg.id,
           funcionaria,
-          unidade:     (p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(),
+          unidade:     (p['Obs']?.title?.[0]?.plain_text||'').match(/\b(\d{2,4})\b/)?.[1]||'',
           valor:       p['Valor Unit.']?.number||0,
           extra:       p['Extra']?.number||0,
           extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
@@ -1909,7 +1916,7 @@ async function loadHistory() {
       const item = {
         id:          pg.id,
         funcionaria,
-        unidade:     (p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(),
+        unidade:     (p['Obs']?.title?.[0]?.plain_text||'').match(/\b(\d{2,4})\b/)?.[1]||'',
         valor:       p['Valor Unit.']?.number||0,
         extra:       p['Extra']?.number||0,
         extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
@@ -1982,13 +1989,13 @@ async function loadHistory() {
 
       const rowsHtml = items.map(i=>{
         const cor=EMP_COLORS[i.funcionaria]||'#94a3b8';
-        const sub = i.unidade ? `Unidade ${i.unidade}` : (i.tipo || 'Limpeza');
+        const unitLabel = i.unidade || i.tipo || 'Limpeza';
         return `
           <div class="history-row">
             <div class="history-row-dot" style="background:${cor}"></div>
             <div class="history-row-info">
-              <div class="history-row-name">${i.funcionaria}</div>
-              <div class="history-row-unit">${sub}</div>
+              <div class="history-row-name">${unitLabel}</div>
+              <div class="history-row-unit">${i.funcionaria}</div>
             </div>
             <div class="history-row-right">
               <span class="history-row-val">${fmt((i.valor||0)+(i.extra||0))}</span>
@@ -2017,8 +2024,7 @@ async function loadHistory() {
     for (const i of allHistoryItems) {
       if (!byEmpDay[i.funcionaria]) byEmpDay[i.funcionaria] = {};
       if (!byEmpDay[i.funcionaria][i.data]) byEmpDay[i.funcionaria][i.data] = [];
-      if (i.unidade) byEmpDay[i.funcionaria][i.data].push(i.unidade);
-      else byEmpDay[i.funcionaria][i.data].push('—');
+      byEmpDay[i.funcionaria][i.data].push(i);
     }
     const empDayHtml = Object.entries(byEmpDay)
       .filter(([n]) => { const c=FUNCIONARIOS[n]; return !c || c.tipo==='limpeza'; })
@@ -2028,14 +2034,25 @@ async function loadHistory() {
         const totalLimp = Object.values(diasMap).reduce((s,u) => s+u.length, 0);
         const diasHtml = Object.entries(diasMap)
           .sort(([a],[b]) => b.localeCompare(a))
-          .map(([ds, unids]) => {
+          .map(([ds, dayItems]) => {
             const [y,m,d] = ds.split('-').map(Number);
             const dt = new Date(y,m-1,d);
             const label = `${DIAS_PT[dt.getDay()]} ${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}`;
-            return `<div class="empday-row">
-              <span class="empday-date">${label}</span>
-              <span class="empday-units">${unids.join(', ')}</span>
-              <span class="empday-count">${unids.length} unid.</span>
+            const dayTotal = dayItems.reduce((s,i) => s+(i.valor||0)+(i.extra||0), 0);
+            const unitRows = dayItems.map(i => {
+              const v = (i.valor||0)+(i.extra||0);
+              return `<div class="empday-unit-row">
+                <span class="empday-unit-num">${i.unidade||'—'}</span>
+                <span class="empday-unit-val">${fmt(v)}</span>
+              </div>`;
+            }).join('');
+            return `<div class="empday-day-group">
+              <div class="empday-day-label">${label}</div>
+              ${unitRows}
+              <div class="empday-day-total">
+                <span>${dayItems.length} unid.</span>
+                <span>${fmt(dayTotal)}</span>
+              </div>
             </div>`;
           }).join('');
         return `<div class="empday-card" style="border-left-color:${cor}">
@@ -2315,7 +2332,7 @@ async function abrirFecharQuinzena() {
     quinzenaDataCache = allResults.map(pg => {
       const p = pg.properties;
       const funcionaria = p['Funcionária']?.select?.name||'?';
-      return { funcionaria, unidade:(p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(), valor:p['Valor Unit.']?.number||0, extra:p['Extra']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
+      return { funcionaria, unidade:(p['Obs']?.title?.[0]?.plain_text||'').match(/\b(\d{2,4})\b/)?.[1]||'', valor:p['Valor Unit.']?.number||0, extra:p['Extra']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
     });
 
     const byEmp = {};
