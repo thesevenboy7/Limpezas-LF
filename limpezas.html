@@ -2315,7 +2315,7 @@ async function abrirFecharQuinzena() {
     quinzenaDataCache = allResults.map(pg => {
       const p = pg.properties;
       const funcionaria = p['Funcionária']?.select?.name||'?';
-      return { funcionaria, unidade:p['Unidade']?.select?.name||'', valor:p['Valor Unit.']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
+      return { funcionaria, unidade:p['Unidade']?.select?.name||'', valor:p['Valor Unit.']?.number||0, extra:p['Extra']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
     });
 
     const byEmp = {};
@@ -2376,11 +2376,11 @@ function copiarResumoQuinzena() {
   const fN=Object.keys(byEmp).filter(isFixo).sort();
   const sN=Object.keys(byEmp).filter(isSuperv).sort();
   const laN=Object.keys(byEmp).filter(isLandsAv).sort();
-  if(lN.length){ txt+=`🧹 *LIMPEZAS*\n`; for(const n of lN){ const its=byEmp[n]; const tot=its.reduce((s,i)=>s+(i.valor||0),0); const pend=its.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0),0); txt+=`\n*${n}*\n`; [...its].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{ const det=i.unidade?`Unid.${i.unidade} · `:``;  txt+=`  ${fmtData(i.data)} · ${det}${fmt(i.valor||0)} · ${i.pago?'✓':'✗'}\n`; }); txt+=`  *Total: ${fmt(tot)}*${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`; } txt+='\n'; }
+  if(lN.length){ txt+=`🧹 *LIMPEZAS*\n`; for(const n of lN){ const its=byEmp[n]; const tot=its.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0); const pend=its.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0); txt+=`\n*${n}*\n`; [...its].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{ const det=i.unidade?`Unid.${i.unidade} · `:``;  txt+=`  ${fmtData(i.data)} · ${det}${fmt((i.valor||0)+(i.extra||0))} · ${i.pago?'✓':'✗'}\n`; }); txt+=`  *Total: ${fmt(tot)}*${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`; } txt+='\n'; }
   if(fN.length){ txt+=`📋 *FIXOS QUINZENAIS*\n`; for(const n of fN){ const cfg=FUNCIONARIOS[n]; txt+=`  ${n}: ${fmt(cfg?.valorFixo||0)} (${byEmp[n].length} reg)\n`; } txt+='\n'; }
   if(sN.length){ txt+=`👷 *SUPERVISÃO*\n`; const desc=getDescontadoJaime(); for(const n of sN){ const its=byEmp[n]; const bruto=its.reduce((s,i)=>s+(i.valor||0),0); const d=n==='Jaime'?desc:0; const liq=Math.max(0,bruto-d); txt+=`\n*${n}*\n`; [...its].sort((a,b)=>a.data.localeCompare(b.data)).forEach(i=>{ txt+=`  ${fmtData(i.data)} · ${fmt(i.valor||0)} · ${i.pago?'✓':'✗'}\n`; }); txt+=`  Bruto: ${fmt(bruto)}`; if(d>0) txt+=` · Desc: ${fmt(d)}`; txt+=` · *Líquido: ${fmt(liq)}*\n`; } txt+='\n'; }
-  if(laN.length){ txt+=`🌿 *LANDSCAPING*\n`; for(const n of laN){ const its=byEmp[n]; const tot=its.reduce((s,i)=>s+(i.valor||0),0); const pend=its.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0),0); txt+=`  *${n}*: ${fmt(tot)}${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`; } txt+='\n'; }
-  const gt=items.reduce((s,i)=>s+(i.valor||0),0); const gp=items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0),0);
+  if(laN.length){ txt+=`🌿 *LANDSCAPING*\n`; for(const n of laN){ const its=byEmp[n]; const tot=its.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0); const pend=its.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0); txt+=`  *${n}*: ${fmt(tot)}${pend>0?` · 💰 ${fmt(pend)} pendente`:' · ✅ pago'}\n`; } txt+='\n'; }
+  const gt=items.reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0); const gp=items.filter(i=>!i.pago).reduce((s,i)=>s+(i.valor||0)+(i.extra||0),0);
   txt+=`💰 *TOTAL QUINZENA: ${fmt(gt)}*`; if(gp>0) txt+=`\n*A pagar: ${fmt(gp)}*`;
   const copy = txt => navigator.clipboard ? navigator.clipboard.writeText(txt).then(()=>showToast('✅ Copiado! Cole no WhatsApp.',3000)).catch(()=>fallbackCopy(txt)) : fallbackCopy(txt);
   const fallbackCopy = t => { const el=document.createElement('textarea'); el.value=t; document.body.appendChild(el); el.select(); try{document.execCommand('copy');}catch(_){} document.body.removeChild(el); showToast('✅ Copiado!'); };
@@ -2478,6 +2478,7 @@ async function loadDashboardMes() {
       return {
         funcionaria,
         valor: p['Valor Unit.']?.number||0,
+        extra: p['Extra']?.number||0,
         data:  (p['Data']?.date?.start||'').slice(0,10),
         tipo:  tipoDoFuncionario(funcionaria)
       };
@@ -2486,7 +2487,7 @@ async function loadDashboardMes() {
     const byEmp = {}; let totalMes = 0, totalRegs = 0;
     const diasUnicos = new Set();
     items.forEach(i => {
-      const v = i.valor||0;
+      const v = (i.valor||0)+(i.extra||0);
       if (!byEmp[i.funcionaria]) byEmp[i.funcionaria]={total:0,count:0,tipo:i.tipo};
       byEmp[i.funcionaria].total += v; byEmp[i.funcionaria].count++;
       totalMes += v; totalRegs++;
