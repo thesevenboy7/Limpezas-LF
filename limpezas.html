@@ -1359,7 +1359,7 @@ async function fetchHojeDoNotion(dateISO) {
           id:          pg.id,
           notionId:    pg.id,
           funcionaria,
-          unidade:     p['Unidade']?.select?.name||'',
+          unidade:     (p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(),
           valor:       p['Valor Unit.']?.number||0,
           extra:       p['Extra']?.number||0,
           extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
@@ -1909,7 +1909,7 @@ async function loadHistory() {
       const item = {
         id:          pg.id,
         funcionaria,
-        unidade:     p['Unidade']?.select?.name||'',
+        unidade:     (p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(),
         valor:       p['Valor Unit.']?.number||0,
         extra:       p['Extra']?.number||0,
         extraDesc:   p['Extra Desc']?.rich_text?.[0]?.plain_text||'',
@@ -2315,7 +2315,7 @@ async function abrirFecharQuinzena() {
     quinzenaDataCache = allResults.map(pg => {
       const p = pg.properties;
       const funcionaria = p['Funcionária']?.select?.name||'?';
-      return { funcionaria, unidade:p['Unidade']?.select?.name||'', valor:p['Valor Unit.']?.number||0, extra:p['Extra']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
+      return { funcionaria, unidade:(p['Obs']?.title?.[0]?.plain_text||'').split(' - ')[0].trim(), valor:p['Valor Unit.']?.number||0, extra:p['Extra']?.number||0, data:(p['Data']?.date?.start||'').slice(0,10), tipo:tipoDoFuncionario(funcionaria), pago:p['Pago?']?.checkbox||false };
     });
 
     const byEmp = {};
