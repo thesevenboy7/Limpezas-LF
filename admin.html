@@ -454,8 +454,13 @@
 <!-- ══ LOGIN ══ -->
 <div id="screen-login">
   <div class="login-logo">Lyrios<span>.</span></div>
-  <div class="login-role">Administrador</div>
+  <div class="login-role" id="login-role-label">Administrador</div>
   <div class="login-card">
+    <label class="login-label">Perfil</label>
+    <select id="inp-role" class="login-input" style="cursor:pointer" onchange="document.getElementById('login-role-label').textContent=this.value==='admin'?'Administrador':'Supervisor'">
+      <option value="admin">Administrador</option>
+      <option value="supervisor">Supervisor</option>
+    </select>
     <label class="login-label" for="inp-nome">Seu nome</label>
     <input type="text" id="inp-nome" class="login-input" placeholder="Mario..." autocomplete="off" autocorrect="off" spellcheck="false">
     <label class="login-label" for="inp-pin">PIN</label>
@@ -692,7 +697,7 @@ function adminHeaders() {
     if (raw) {
       const parsed = JSON.parse(raw);
       const diaAuth = parsed.autenticadaEm ? parsed.autenticadaEm.slice(0, 10) : null;
-      if (diaAuth === todayISO() && parsed.role === 'admin') {
+      if (diaAuth === todayISO() && ['admin','supervisor'].includes(parsed.role)) {
         sess = parsed;
       } else {
         sessionStorage.removeItem('lf_admin_session');
@@ -728,7 +733,7 @@ async function fazerLogin() {
     const res = await fetch(`${WORKER}/auth/pin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, pin, role: 'admin' })
+      body: JSON.stringify({ nome, pin, role: document.getElementById('inp-role').value })
     });
     const data = await res.json();
     if (!res.ok) { mostrarErroLogin(data.error || 'Credenciais inválidas'); return; }
