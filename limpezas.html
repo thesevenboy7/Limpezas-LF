@@ -919,6 +919,8 @@
     <p class="modal-desc">Configure uma vez — fica salvo no celular.</p>
     <label class="modal-label">Notion Integration Token</label>
     <input type="password" id="inputToken" placeholder="secret_..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <label class="modal-label">Notion Database ID</label>
+    <input type="text" id="inputDbId" placeholder="0dc0408e502942e6b36a6b9b3960558d" autocomplete="off" autocorrect="off" spellcheck="false">
     <label class="modal-label">URL do Cloudflare Worker (proxy)</label>
     <input type="text" id="inputProxy" placeholder="https://lf-notion.seu-usuario.workers.dev" autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="modal-note">
@@ -995,8 +997,9 @@
 
 <script>
 // ─── CONFIG ──────────────────────────────────
-const DB_ID         = '0dc0408e502942e6b36a6b9b3960558d';
-const DEFAULT_PROXY = 'https://lf-limpezas.mariopimentel1610.workers.dev';
+const DEFAULT_DB_ID  = '0dc0408e502942e6b36a6b9b3960558d';
+const DEFAULT_PROXY  = 'https://lf-limpezas.mariopimentel1610.workers.dev';
+function getDbId()   { return ls('lf_notion_db') || DEFAULT_DB_ID; }
 
 // ─── FUNCIONÁRIOS ─────────────────────────────
 const FUNCIONARIOS = {
@@ -1077,8 +1080,9 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarLocal(e.target.value);
   });
 
-  document.getElementById('inputToken').value = ls('lf_token') || '';
-  document.getElementById('inputProxy').value = ls('lf_proxy') || DEFAULT_PROXY;
+  document.getElementById('inputToken').value = ls('lf_notion_token') || '';
+  document.getElementById('inputDbId').value  = ls('lf_notion_db')    || '';
+  document.getElementById('inputProxy').value = ls('lf_proxy')        || DEFAULT_PROXY;
 
   // Unit search
   const inp = document.getElementById('inputUnidade');
@@ -1335,12 +1339,12 @@ function showToast(msg, ms=2600) {
 
 // ─── BUSCA DO DIA NO NOTION ──────────────────
 async function fetchHojeDoNotion(dateISO) {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) return;
 
   try {
-    const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+    const res = await fetch(`${proxyUrl}/v1/databases/${getDbId()}/query`, {
       method:'POST',
       headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
       body: JSON.stringify({
@@ -1385,7 +1389,7 @@ async function fetchHojeDoNotion(dateISO) {
 
 // ─── TOKEN BANNER ────────────────────────────
 function checkTokenBanner() {
-  document.getElementById('tokenBanner').style.display = (ls('lf_token')||'') ? 'none' : 'flex';
+  document.getElementById('tokenBanner').style.display = (ls('lf_notion_token')||'') ? 'none' : 'flex';
 }
 
 // ─── UNIT SEARCH ─────────────────────────────
@@ -1521,7 +1525,7 @@ function closeConfirm() {
   document.getElementById('confirmModal').classList.remove('open');
 }
 async function archiveNotion(notionId) {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) return true;
   const res = await fetch(`${proxyUrl}/v1/pages/${notionId}`, {
@@ -1717,7 +1721,8 @@ function renderSaveBar() {
 function openSettings()  { document.getElementById('settingsModal').classList.add('open'); }
 function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
 function saveSettings() {
-  ls('lf_token', document.getElementById('inputToken').value.trim());
+  ls('lf_notion_token', document.getElementById('inputToken').value.trim());
+  ls('lf_notion_db',    document.getElementById('inputDbId').value.trim() || null);
   ls('lf_proxy', document.getElementById('inputProxy').value.trim().replace(/\/$/,''));
   closeSettings(); checkTokenBanner(); loadHistory();
   showToast('✅ Configurações salvas!');
@@ -1747,7 +1752,7 @@ function buildObsText(l) {
 }
 
 async function salvarNotion() {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) { openSettings(); showToast('⚠️ Configure o token do Notion primeiro'); return; }
 
@@ -1787,7 +1792,7 @@ async function salvarNotion() {
       'Extra Desc':  { rich_text:[{text:{content:l.extraDesc||''}}] }
     };
     if (l.unidade) props['Unidade'] = { select:{name:l.unidade} };
-    const body = { parent:{ database_id:DB_ID }, properties:props };
+    const body = { parent:{ database_id:getDbId() }, properties:props };
     try {
       const res = await fetch(`${proxyUrl}/v1/pages`, {
         method:'POST',
@@ -1860,7 +1865,7 @@ function getDateRange(filter) {
 }
 
 async function loadHistory() {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   const section  = document.getElementById('historySection');
   const content  = document.getElementById('historyContent');
@@ -1894,7 +1899,7 @@ async function loadHistory() {
       };
       if (cursor) body.start_cursor = cursor;
 
-      const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+      const res = await fetch(`${proxyUrl}/v1/databases/${getDbId()}/query`, {
         method:'POST',
         headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
         body: JSON.stringify(body)
@@ -2081,7 +2086,7 @@ async function loadHistory() {
 
 // Pago/não pago no dia atual
 async function togglePagoHoje(notionId, currentPago, btn) {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
   btn.disabled = true;
@@ -2213,7 +2218,7 @@ function copiarResumo() {
 
 // ─── MARCAR TUDO PAGO POR FUNCIONÁRIO ────────
 async function marcarTudoPago(funcionaria, btn) {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
 
@@ -2244,7 +2249,7 @@ function updateBatchPayBtn() {
 }
 
 async function marcarTodosHojePagos() {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
   const naoPageos = notionHojeItems.filter(i => !i.pago);
@@ -2294,7 +2299,7 @@ function exportarCSV() {
 let quinzenaDataCache = null;
 
 async function abrirFecharQuinzena() {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   document.getElementById('quinzenaModal').classList.add('open');
   document.getElementById('quinzenaContent').innerHTML = '<div class="mes-loading">⏳ Buscando registros dos últimos 15 dias...</div>';
@@ -2315,7 +2320,7 @@ async function abrirFecharQuinzena() {
         sorts:[{property:'Data',direction:'descending'}], page_size:100
       };
       if (cursor) body.start_cursor = cursor;
-      const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+      const res = await fetch(`${proxyUrl}/v1/databases/${getDbId()}/query`, {
         method:'POST',
         headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
         body: JSON.stringify(body)
@@ -2416,7 +2421,7 @@ function switchTab(tab) {
     if (el) el.classList.toggle('active', t===tab);
   });
   if (tab==='historico') {
-    if (!ls('lf_token')) {
+    if (!ls('lf_notion_token')) {
       const c = document.getElementById('historyContent');
       if (c) c.innerHTML = '<div class="mes-no-token">Configure o token do Notion nas configurações para ver o histórico.</div>';
       if (histEl) histEl.style.display = 'block';
@@ -2425,7 +2430,7 @@ function switchTab(tab) {
     }
   }
   if (tab==='mes') {
-    if (!ls('lf_token')) {
+    if (!ls('lf_notion_token')) {
       document.getElementById('mesContent').innerHTML =
         '<div class="mes-no-token">Configure o token do Notion nas configurações para ver o dashboard mensal.</div>';
     } else {
@@ -2446,7 +2451,7 @@ function navMes(dir) {
 }
 
 async function loadDashboardMes() {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   const content  = document.getElementById('mesContent');
   const titulo   = document.getElementById('mesTitulo');
@@ -2475,7 +2480,7 @@ async function loadDashboardMes() {
         page_size:100
       };
       if (cursor) body.start_cursor = cursor;
-      const res = await fetch(`${proxyUrl}/v1/databases/${DB_ID}/query`, {
+      const res = await fetch(`${proxyUrl}/v1/databases/${getDbId()}/query`, {
         method:'POST',
         headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Notion-Version':'2022-06-28'},
         body: JSON.stringify(body)
@@ -2548,7 +2553,7 @@ function toggleHistoryDay(ds) {
 }
 
 async function togglePago(notionId, currentPago, btn) {
-  const token    = ls('lf_token')||'';
+  const token    = ls('lf_notion_token')||'';
   const proxyUrl = ls('lf_proxy')||DEFAULT_PROXY;
   if (!token) { showToast('⚠️ Configure o token primeiro'); return; }
 

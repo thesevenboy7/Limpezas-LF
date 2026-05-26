@@ -354,7 +354,7 @@
 
 <script>
 const WORKER   = 'https://lyrios-cleaning-worker.mariopimentel1610.workers.dev';
-const NOTION_DB = '0dc0408e502942e6b36a6b9b3960558d'; // migrar para env var NOTION_DB_ID no worker futuramente
+const NOTION_DB = localStorage.getItem('lf_notion_db') || '0dc0408e502942e6b36a6b9b3960558d';
 
 const NOMES_DISPLAY = {
   'mireyda': 'Mireyda', 'inosencia': 'Inosencia', 'rosita': 'Rosita',
